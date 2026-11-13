@@ -1,0 +1,508 @@
+@font-face {
+  font-family: "Noto Sans JP";
+  src: url("fonts/noto-sans-jp-700.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans JP";
+  src: url("fonts/noto-sans-jp-900.woff2") format("woff2");
+  font-weight: 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "League Spartan";
+  src: url("fonts/league-spartan-800.woff2") format("woff2");
+  font-weight: 800;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light dark;
+  /* 部屋 (ダークで変わる) */
+  --bg: #ffffff;
+  --text: #222222;
+  --eyebrow: #4e7a0f;
+  --focus: #0070ff;
+  --focus-on-paper: #0070ff;
+  --wheel-shadow: 0 0 0 1px rgba(34, 34, 34, .05), 0 16px 32px -16px rgba(34, 34, 34, .4);
+  --card-shadow: 0 1px 0 rgba(34, 34, 34, .04), 0 12px 28px -18px rgba(34, 34, 34, .45);
+  /* 物 (ダークでも同じ色) */
+  --jy: #9acd32;
+  --jy-deep: #6f9a22;
+  --jy-ink: #1f2a10;
+  --jy-text: #4e7a0f;
+  --jy-soft: #dcefb6;
+  --ink: #222222;
+  --sub: #606566;
+  --line: #e3e8e8;
+  --paper: #ffffff;
+  --yellow: #ffe110;
+  --red: #ff4044;
+  --green: #00c666;
+  --blue: #0070ff;
+  --cyan: #23ddee;
+  --pink: #ff5ccc;
+  --train-shadow: rgba(34, 34, 34, .28);
+  --p1: #fff7c3;
+  --p2: #ffd6f2;
+  --p3: #c7f7fa;
+  --p4: #e9f5c2;
+  --p5: #ffdfcb;
+  --p6: #eed0ff;
+  --station: #ffffff;
+  --station-stroke: #222222;
+  --train-window: #2f3a35;
+  --train-light: #ffe110;
+  --btn-off: #e3e8e8;
+  --btn-off-ink: #7a8081;
+  --btn-off-edge: #c9cfcf;
+  --font-ja: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
+  --font-latin: "League Spartan", "Helvetica Neue", Arial, var(--font-ja);
+  --name-max: 44px;
+  --name-row: 54px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16181b;
+    --text: #f2f2f2;
+    --eyebrow: #9acd32;
+    --focus: #4da3ff;
+    --wheel-shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 18px 36px -16px rgba(0, 0, 0, .9);
+    --card-shadow: 0 14px 30px -18px rgba(0, 0, 0, .9);
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-ja);
+  font-weight: 700;
+  font-feature-settings: "palt";
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.app {
+  height: 100vh;
+  height: 100dvh;
+  max-width: 520px;
+  margin: 0 auto;
+  display: grid;
+  grid-template:
+    "head" auto
+    "stage" minmax(0, 1fr)
+    "plate" auto
+    "action" auto / minmax(0, 1fr);
+  gap: 12px;
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}
+
+/* 見出し: 英字の小見出し + 極太のタイトル + 紙吹雪 */
+.head {
+  grid-area: head;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.head-text { flex: none; }
+
+.eyebrow {
+  margin: 0 0 2px;
+  font: 800 11px/1 var(--font-latin);
+  letter-spacing: .22em;
+  color: var(--eyebrow);
+}
+
+.title {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+  line-height: 1.25;
+  letter-spacing: .02em;
+  white-space: nowrap;
+}
+
+/* 狭い画面ではタイトルを折らずに、紙吹雪の方を縮める */
+.confetti {
+  flex: 0 1 120px;
+  min-width: 0;
+  width: 120px;
+  height: 48px;
+}
+
+.cf-red { fill: var(--red); }
+.cf-yellow { fill: var(--yellow); }
+.cf-green { fill: var(--green); }
+.cf-blue { fill: var(--blue); }
+.cf-cyan { fill: var(--cyan); }
+.cf-pink { fill: var(--pink); }
+.cf-jy { fill: var(--jy); }
+
+/* 盤 */
+.stage {
+  grid-area: stage;
+  container-type: size;
+  min-height: 0;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  padding-top: 16px; /* 電車の顔が盤の上にはみ出す分 */
+}
+
+/* コンテナクエリ単位が無い古いブラウザ向けの代わり: 盤以外の高さ (最大 約 400px) を引いた分に収める */
+.wheel {
+  position: relative;
+  width: max(160px, min(calc(100vw - 32px), calc(100vh - 400px)));
+  aspect-ratio: 1;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+@supports (width: 1cqw) {
+  .wheel { width: min(100cqw, 100cqh); }
+}
+
+.wheel-shadow {
+  position: absolute;
+  inset: 5.49%;
+  border-radius: 50%;
+  box-shadow: var(--wheel-shadow);
+}
+
+.dial {
+  position: absolute;
+  inset: 0;
+}
+
+.wheel.is-spinning .dial { will-change: transform; }
+
+.dial svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.slice { transition: fill .25s ease-out; }
+.slice:nth-child(6n + 1) { fill: var(--p1); }
+.slice:nth-child(6n + 2) { fill: var(--p2); }
+.slice:nth-child(6n + 3) { fill: var(--p3); }
+.slice:nth-child(6n + 4) { fill: var(--p4); }
+.slice:nth-child(6n + 5) { fill: var(--p5); }
+.slice:nth-child(6n) { fill: var(--p6); }
+.slice.is-picked { fill: var(--jy); }
+
+.divider { stroke: var(--paper); stroke-width: 1.4; }
+
+.label { fill: var(--ink); font-weight: 700; }
+
+.rim { fill: none; stroke: var(--jy); stroke-width: 16; }
+
+.dot { fill: var(--station); stroke: var(--station-stroke); stroke-width: 1.4; }
+
+.hub { fill: var(--station); stroke: var(--station-stroke); stroke-width: 3; }
+
+/* 針 = 山手線の電車の顔 */
+/* 先端が外周の帯の内側 (盤の上端から 11.3%) に来る位置。顔は盤の上に少しはみ出す */
+.train {
+  position: absolute;
+  top: -3.3%;
+  left: 50%;
+  width: 14%;
+  margin-left: -7%;
+  transform-origin: 50% 0;
+  pointer-events: none;
+  filter: drop-shadow(0 2px 2px var(--train-shadow));
+}
+
+.train svg { display: block; width: 100%; height: auto; overflow: visible; }
+.train-body { fill: var(--jy); stroke: var(--ink); stroke-width: 2.4; }
+.train-window { fill: var(--train-window); }
+.train-glare { fill: var(--paper); opacity: .7; }
+.train-light { fill: var(--train-light); stroke: var(--ink); stroke-width: 1.6; }
+.train-tip { fill: var(--ink); }
+
+/* 結果プレート (駅名標風) */
+.plate {
+  grid-area: plate;
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-areas:
+    "code kana map"
+    "name name name"
+    "romaji romaji romaji"
+    "band band band"
+    "left . right";
+  align-items: center;
+  padding: 12px 16px 10px;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--card-shadow);
+}
+
+.plate p { margin: 0; }
+.plate .plate-romaji { margin-top: 3px; }
+
+.plate-code {
+  grid-area: code;
+  justify-self: start;
+  display: inline-flex;
+  align-items: center;
+  height: 20px;
+  padding: 1px 9px 0;
+  border-radius: 999px;
+  background: var(--yellow);
+  font: 800 13px/1 var(--font-latin);
+  letter-spacing: .06em;
+}
+
+.plate-kana {
+  grid-area: kana;
+  min-height: 20px;
+  font-size: 12px;
+  line-height: 20px;
+  letter-spacing: var(--kana-track, .3em);
+  padding-left: var(--kana-track, .3em);
+  color: var(--sub);
+  white-space: nowrap;
+}
+
+/* 長い読みは、左右に広い方のピル (地図 約 58px) + すき間 8px を両側に残した幅に収まる大きさまで小さく */
+@supports (width: 1cqi) {
+  .plate-kana { font-size: min(12px, calc((100cqi - 132px) / var(--kana-fit, 4))); }
+}
+
+.plate-map-slot {
+  grid-area: map;
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  height: 20px;
+}
+
+.plate-map {
+  position: relative;
+  display: block;
+  padding: 0 10px;
+  border: 1.5px solid var(--jy-soft);
+  border-radius: 999px;
+  font-size: 12px;
+  line-height: 17px; /* 枠込みで 20px = 1 段目の高さ。下の駅名の行にはみ出さない */
+  color: var(--jy-text);
+  text-decoration: none;
+}
+
+/* 見た目はそのまま、押せる範囲だけ広げる (上と左右へ。下の駅名の行にはかけない) */
+.plate-map::after {
+  content: "";
+  position: absolute;
+  inset: -14px -6px 0;
+}
+
+.plate-map:hover { background: var(--jy-soft); }
+.plate-map:focus-visible { outline: 3px solid var(--focus-on-paper); outline-offset: 2px; }
+
+.plate-name {
+  grid-area: name;
+  height: var(--name-row);
+  line-height: var(--name-row);
+  text-align: center;
+  white-space: nowrap;
+  font-weight: 900;
+  font-size: min(var(--name-max), calc((100vw - 64px) * .9 / var(--fit, 2)));
+  letter-spacing: var(--track, 0);
+  padding-left: var(--track, 0);
+}
+
+@supports (width: 1cqi) {
+  .plate-name { font-size: min(var(--name-max), calc(90cqi / var(--fit, 2))); }
+}
+
+.plate-romaji {
+  grid-area: romaji;
+  min-height: 18px;
+  text-align: center;
+  font: 800 15px/18px var(--font-latin);
+  letter-spacing: .05em;
+}
+
+.plate-band {
+  grid-area: band;
+  height: 8px;
+  margin: 8px 0 6px;
+  border-radius: 999px;
+  background: var(--jy);
+}
+
+.plate-side {
+  min-height: 18px;
+  display: flex;
+  gap: 4px;
+  font-size: 12px;
+  line-height: 18px;
+  color: var(--sub);
+  white-space: nowrap;
+}
+
+.plate-left { grid-area: left; justify-self: start; }
+.plate-right { grid-area: right; justify-self: end; }
+
+/* 結果が無い間 (最初・回転中): 駅名欄だけ薄く出し、他は隠す */
+.plate.is-empty .plate-name { color: var(--sub); }
+.plate.is-empty .plate-code,
+.plate.is-empty .plate-map-slot,
+.plate.is-empty .plate-side { visibility: hidden; }
+
+.plate.is-revealed .plate-name,
+.plate.is-revealed .plate-kana,
+.plate.is-revealed .plate-romaji {
+  animation: reveal .32s cubic-bezier(.2, .8, .3, 1.2) both;
+}
+
+@keyframes reveal {
+  from { opacity: 0; transform: translateY(8px) scale(.96); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ボタン: 山手線の色のピル + 下の厚み */
+.action { grid-area: action; padding-bottom: 6px; }
+
+.spin {
+  display: block;
+  width: 100%;
+  height: 58px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--jy);
+  color: var(--jy-ink);
+  font: 900 20px/1 var(--font-ja);
+  letter-spacing: .25em;
+  text-indent: .25em;
+  cursor: pointer;
+  touch-action: manipulation;
+  box-shadow: 0 6px 0 var(--jy-deep);
+  transition: transform .08s ease-out, box-shadow .08s ease-out, background-color .2s ease-out;
+}
+
+.spin:active:not([aria-disabled="true"]) { transform: translateY(4px); box-shadow: 0 2px 0 var(--jy-deep); }
+.spin[aria-disabled="true"] { background: var(--btn-off); color: var(--btn-off-ink); box-shadow: 0 6px 0 var(--btn-off-edge); cursor: default; }
+.spin:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+
+/* 紙吹雪 (止まったとき) */
+.burst {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 10;
+}
+
+.burst i {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+}
+
+.burst i:nth-child(7n + 1) { background: var(--red); }
+.burst i:nth-child(7n + 2) { background: var(--yellow); }
+.burst i:nth-child(7n + 3) { background: var(--blue); }
+.burst i:nth-child(7n + 4) { background: var(--pink); }
+.burst i:nth-child(7n + 5) { background: var(--cyan); }
+.burst i:nth-child(7n + 6) { background: var(--green); }
+.burst i:nth-child(7n) { background: var(--jy); }
+.burst .c { border-radius: 50%; }
+.burst .t { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+.burst .h { clip-path: path("M5 9 1.2 5.2A2.5 2.5 0 0 1 5 2.1 2.5 2.5 0 0 1 8.8 5.2Z"); }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 背の低い画面 (Safari のツールバーが出ている iPhone SE など): すき間を詰めて盤を大きく残す */
+@media (max-height: 700px) and (max-width: 859px) {
+  :root { --name-max: 36px; --name-row: 44px; }
+  .app {
+    gap: 8px;
+    padding-top: max(8px, env(safe-area-inset-top));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+  .title { font-size: 20px; }
+  .confetti { height: 40px; }
+  .stage { padding-top: 12px; }
+  .plate { padding: 8px 14px; }
+  .plate-band { margin: 6px 0 4px; }
+  .spin { height: 52px; }
+  .action { padding-bottom: 5px; }
+}
+
+/* PC・横向き: 左に盤、右に見出し・プレート・ボタン */
+@media (min-width: 860px), (orientation: landscape) and (max-height: 520px) {
+  .app {
+    max-width: 1080px;
+    grid-template:
+      "stage ." minmax(0, 1fr)
+      "stage head" auto
+      "stage plate" auto
+      "stage action" auto
+      "stage ." minmax(0, 1fr) / minmax(0, 1.25fr) minmax(280px, 1fr);
+    column-gap: clamp(20px, 4vw, 56px);
+    row-gap: 14px;
+  }
+
+  .wheel { width: min(calc((min(100vw, 1080px) - 88px) * .55), calc(100vw - 312px - clamp(20px, 4vw, 56px)), calc(100vh - 48px)); }
+
+  @supports (width: 1cqw) {
+    .wheel { width: min(100cqw, 100cqh); }
+  }
+
+  .plate-name { font-size: min(var(--name-max), calc(36vw / var(--fit, 2))); }
+
+  @supports (width: 1cqi) {
+    .plate-name { font-size: min(var(--name-max), calc(90cqi / var(--fit, 2))); }
+  }
+}
+
+/* 横向きで背の低いスマホ (568x320 など): 右の列の行間を詰める */
+@media (orientation: landscape) and (max-height: 520px) {
+  .app { row-gap: 6px; }
+}
+
+@media (min-width: 860px) {
+  :root { --name-max: 60px; --name-row: 74px; }
+  .title { font-size: 28px; }
+  .plate { padding: 16px 22px 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .plate.is-revealed .plate-name,
+  .plate.is-revealed .plate-kana,
+  .plate.is-revealed .plate-romaji { animation: none; }
+  .slice, .spin { transition: none; }
+}

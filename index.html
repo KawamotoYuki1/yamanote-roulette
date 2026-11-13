@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>山手線ルーレット</title>
+<meta name="description" content="山手線の30駅から1駅をルーレットで選ぶ、スマホ向けのWebアプリ。">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16181b" media="(prefers-color-scheme: dark)">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="山手線ルーレット">
+<link rel="preload" href="fonts/noto-sans-jp-900.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/noto-sans-jp-700.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="style.css">
+<script type="module" src="js/app.js"></script>
+</head>
+<body>
+<main class="app">
+  <header class="head">
+    <div class="head-text">
+      <p class="eyebrow" lang="en">YAMANOTE LINE</p>
+      <h1 class="title">山手線ルーレット</h1>
+    </div>
+    <svg class="confetti" viewBox="0 0 120 48" aria-hidden="true" focusable="false">
+      <defs><path id="heart" d="M0 3.4-3.2.2A2 2 0 0 1 0-2.3 2 2 0 0 1 3.2.2Z"/></defs>
+      <use href="#heart" x="12" y="30" class="cf-pink"/>
+      <circle cx="27" cy="12" r="3" class="cf-yellow"/>
+      <path d="m38 36 4.5-8 4.5 8z" class="cf-blue"/>
+      <circle cx="55" cy="22" r="2.4" class="cf-cyan"/>
+      <use href="#heart" x="68" y="11" class="cf-blue"/>
+      <circle cx="80" cy="37" r="3.2" class="cf-red"/>
+      <path d="m90 18 4-7 4 7z" class="cf-yellow"/>
+      <circle cx="103" cy="30" r="2.6" class="cf-green"/>
+      <use href="#heart" x="112" y="12" class="cf-red"/>
+      <path d="m60 44 3.5-6 3.5 6z" class="cf-pink"/>
+      <circle cx="20" cy="44" r="2" class="cf-jy"/>
+      <use href="#heart" x="95" y="43" class="cf-cyan"/>
+    </svg>
+  </header>
+
+  <div class="stage">
+    <div class="wheel" id="wheel" role="img" aria-label="山手線30駅のルーレット盤">
+      <div class="wheel-shadow" aria-hidden="true"></div>
+      <div class="dial" id="dial"></div>
+      <div class="train" id="train" aria-hidden="true">
+        <svg viewBox="0 0 48 52" focusable="false">
+          <path class="train-tip" d="M17 33h14l-7 17z"/>
+          <rect class="train-body" x="5" y="2" width="38" height="34" rx="11"/>
+          <rect class="train-window" x="11" y="8" width="26" height="12" rx="4"/>
+          <rect class="train-glare" x="14" y="10.5" width="7" height="3" rx="1.5"/>
+          <circle class="train-light" cx="14.5" cy="28" r="3.3"/>
+          <circle class="train-light" cx="33.5" cy="28" r="3.3"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <section class="plate is-empty" id="plate" aria-label="選ばれた駅">
+    <span class="plate-code" id="plate-code" lang="en"></span>
+    <span class="plate-kana" id="plate-kana"></span>
+    <span class="plate-map-slot" id="plate-map-slot"></span>
+    <p class="plate-name" id="plate-name">？</p>
+    <p class="plate-romaji" id="plate-romaji" lang="en"></p>
+    <div class="plate-band" aria-hidden="true"></div>
+    <p class="plate-side plate-left"><span class="sr-only">となりの駅 </span><span aria-hidden="true">←</span><span id="plate-left"></span></p>
+    <p class="plate-side plate-right"><span class="sr-only">となりの駅 </span><span id="plate-right"></span><span aria-hidden="true">→</span></p>
+  </section>
+
+  <div class="action">
+    <button class="spin" id="spin" type="button">回す</button>
+  </div>
+
+  <p class="sr-only" id="announce" aria-live="polite"></p>
+</main>
+</body>
+</html>
