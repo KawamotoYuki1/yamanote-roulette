@@ -30,8 +30,22 @@ export const randomUnit = (nextUint32 = cryptoUint32) => nextUint32() / UINT32_R
 /** マス i の中心の角度 (真上から時計回りを正)。駅は反時計回りに並ぶ = 北が上の路線図と同じ巡り */
 export const sliceAngle = (i, n) => 0 - i * (360 / n);
 
-/** 真上のマス i の左右にあるマス (左 = 番号が 1 つ後 / 右 = 1 つ前) */
-export const sides = (i, n) => ({ left: wrap(i + 1, n), right: wrap(i - 1, n) });
+/**
+ * 真上のマス i の左右にあるマス (左 = 番号が 1 つ後 / 右 = 1 つ前)。
+ * 環状線は輪で回る。端がある路線は、終点・始発で片側が無い (-1)。
+ * breaks = 線路がつながっていない所 (k = k と k+1 の間)。またぐ駅はとなりにしない
+ */
+export function sides(i, n, loop = true, breaks = []) {
+  if (loop) return { left: wrap(i + 1, n), right: wrap(i - 1, n) };
+  const cut = new Set(breaks);
+  return {
+    left: i + 1 < n && !cut.has(i) ? i + 1 : -1,
+    right: i - 1 >= 0 && !cut.has(i - 1) ? i - 1 : -1,
+  };
+}
+
+/** 止まる位置のずれの上限: 4° とマスの幅の 1/3 の小さい方 (境目に寄りすぎない) */
+export const jitterLimit = (n) => Math.min(SPIN.jitterDeg, 360 / n / 3);
 
 /** 盤の回転角 (度・時計回り) のとき、真上の針の下にあるマスの番号 */
 export function indexAt(rotationDeg, n) {

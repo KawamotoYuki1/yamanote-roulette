@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { STATIONS } from '../js/stations.js';
 import {
-  SPIN, wrap, randomIndex, randomUnit, indexAt, planSpin, easeOutQuart, sliceAngle, sides,
+  SPIN, wrap, randomIndex, randomUnit, indexAt, planSpin, easeOutQuart, sliceAngle, sides, jitterLimit,
 } from '../js/roulette.js';
 
 const N = STATIONS.length;
@@ -158,4 +158,42 @@ test('easeOutQuart: 0→0, 1→1, 単調増加', () => {
     assert.ok(v >= prev);
     prev = v;
   }
+});
+
+const SIZES = [2, 3, 7, 13, 30, 41, 45, 80, 120];
+
+test('いろいろな駅の数: どの n でも、止まった角の針の下が目標の駅 (ずれの端まで)', () => {
+  for (const n of SIZES) {
+    const lim = jitterLimit(n);
+    for (const from of [0, 33.3, -517.25, 7200.1]) {
+      for (let target = 0; target < n; target += 1) {
+        for (const jitter of [-lim, 0, lim]) {
+          const end = planSpin({ from, target, n, turns: SPIN.turns, jitter });
+          assert.equal(indexAt(end, n), target, `n=${n} from=${from} target=${target} jitter=${jitter}`);
+        }
+      }
+    }
+  }
+});
+
+test('jitterLimit: マスの幅の 1/3 と 4° の小さい方 (境目に寄りすぎない)', () => {
+  assert.equal(jitterLimit(30), 4);
+  assert.equal(jitterLimit(90), 360 / 90 / 3);
+  for (const n of SIZES) assert.ok(jitterLimit(n) < 360 / n / 2, `n=${n}`);
+});
+
+test('sides: 端がある路線は終点・始発で片側が無い (-1)', () => {
+  assert.deepEqual(sides(0, 10, false), { left: 1, right: -1 });
+  assert.deepEqual(sides(9, 10, false), { left: -1, right: 8 });
+  assert.deepEqual(sides(4, 10, false), { left: 5, right: 3 });
+  assert.deepEqual(sides(0, 10, true), { left: 1, right: 9 });
+});
+
+test('sides: 切れ目 (i と i+1 の間がつながっていない) をまたぐ駅は、となりにしない', () => {
+  // 0-1-2 | 3-4 (2 と 3 の間が切れ目)
+  assert.deepEqual(sides(2, 5, false, [2]), { left: -1, right: 1 });
+  assert.deepEqual(sides(3, 5, false, [2]), { left: 4, right: -1 });
+  assert.deepEqual(sides(0, 5, false, [2]), { left: 1, right: -1 });
+  assert.deepEqual(sides(4, 5, false, [2]), { left: -1, right: 3 });
+  assert.deepEqual(sides(1, 5, false, [0, 1]), { left: -1, right: -1 });
 });

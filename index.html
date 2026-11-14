@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>山手線ルーレット</title>
-<meta name="description" content="山手線の30駅から1駅をルーレットで選ぶ、スマホ向けのWebアプリ。">
+<title>駅ルーレット</title>
+<meta name="description" content="大都市圏の路線を選んで、その路線の駅から1駅をルーレットで選ぶ、スマホ向けのWebアプリ。">
 <meta name="color-scheme" content="light dark">
 <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#16181b" media="(prefers-color-scheme: dark)">
@@ -12,7 +12,8 @@
 <link rel="icon" href="icons/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<meta name="apple-mobile-web-app-title" content="山手線ルーレット">
+<meta name="apple-mobile-web-app-title" content="駅ルーレット">
+<script>try{var l=localStorage.getItem('yr:line');if(l&&l!=='l11302')document.documentElement.classList.add('is-restoring')}catch(e){}</script>
 <link rel="preload" href="fonts/noto-sans-jp-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/noto-sans-jp-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
@@ -21,10 +22,11 @@
 <body>
 <main class="app">
   <header class="head">
-    <div class="head-text">
-      <p class="eyebrow" lang="en">YAMANOTE LINE</p>
-      <h1 class="title">山手線ルーレット</h1>
+    <div class="pickers">
+      <label class="picker picker-region"><span class="sr-only">地域</span><select id="pick-region"><option>東京</option></select></label>
+      <label class="picker picker-line"><span class="sr-only">路線</span><select id="pick-line"><option value="l11302">山手線</option></select></label>
     </div>
+    <h1 class="title" id="title">山手線ルーレット</h1>
     <svg class="confetti" viewBox="0 0 120 48" aria-hidden="true" focusable="false">
       <defs><path id="heart" d="M0 3.4-3.2.2A2 2 0 0 1 0-2.3 2 2 0 0 1 3.2.2Z"/></defs>
       <use href="#heart" x="12" y="30" class="cf-pink"/>
@@ -43,7 +45,7 @@
   </header>
 
   <div class="stage">
-    <div class="wheel" id="wheel" role="img" aria-label="山手線30駅のルーレット盤">
+    <div class="wheel" id="wheel" role="img" aria-label="ルーレット盤">
       <div class="wheel-shadow" aria-hidden="true"></div>
       <div class="dial" id="dial"></div>
       <div class="train" id="train" aria-hidden="true">
@@ -60,14 +62,16 @@
   </div>
 
   <section class="plate is-empty" id="plate" aria-label="選ばれた駅">
-    <span class="plate-code" id="plate-code" lang="en"></span>
-    <span class="plate-kana" id="plate-kana"></span>
-    <span class="plate-map-slot" id="plate-map-slot"></span>
     <p class="plate-name" id="plate-name">？</p>
+    <span class="plate-kana" id="plate-kana"></span>
     <p class="plate-romaji" id="plate-romaji" lang="en"></p>
+    <span class="plate-code" id="plate-code" lang="en"></span>
+    <div class="plate-sides">
+      <p class="plate-side plate-left"><span class="sr-only">となりの駅 </span><span aria-hidden="true">←</span><span class="plate-side-name" id="plate-left"></span></p>
+      <p class="plate-side plate-right"><span class="sr-only">となりの駅 </span><span class="plate-side-name" id="plate-right"></span><span aria-hidden="true">→</span></p>
+    </div>
     <div class="plate-band" aria-hidden="true"></div>
-    <p class="plate-side plate-left"><span class="sr-only">となりの駅 </span><span aria-hidden="true">←</span><span id="plate-left"></span></p>
-    <p class="plate-side plate-right"><span class="sr-only">となりの駅 </span><span id="plate-right"></span><span aria-hidden="true">→</span></p>
+    <span class="plate-map-slot" id="plate-map-slot"></span>
   </section>
 
   <div class="action">

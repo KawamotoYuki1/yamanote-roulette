@@ -1,7 +1,23 @@
+/* fonts:begin — tools/make_fonts.py が書く。手で直さない */
+@font-face {
+  font-family: "Noto Sans JP";
+  src: url("fonts/noto-sans-jp-700-ext.woff2") format("woff2");
+  font-weight: 700;
+  font-display: swap;
+}
+
 @font-face {
   font-family: "Noto Sans JP";
   src: url("fonts/noto-sans-jp-700.woff2") format("woff2");
   font-weight: 700;
+  font-display: swap;
+  unicode-range: U+20-7E, U+14C-14D, U+16B, U+2190, U+2192, U+2197, U+3005, U+3008-3009, U+300C-300F, U+301C, U+3041-3096, U+3099-30FF, U+4E00, U+4E0A, U+4E45, U+4E94, U+4EAC, U+4EE3, U+4FDD, U+5175, U+5317, U+5343, U+539F, U+53CD, U+53E4, U+540D, U+54C1, U+56DE, U+56F3, U+570F, U+5730, U+57DF, U+57FC, U+5834, U+585A, U+5927, U+5948, U+5BBF, U+5BFF, U+5C4B, U+5C71, U+5CA1, U+5D0E, U+5DDD, U+5DE3, U+5E4C, U+5EAB, U+5F92, U+5FA1, U+6075, U+611B, U+624B, U+65B0, U+65E5, U+66AE, U+6709, U+6728, U+672C-672D, U+6771, U+677E, U+697D, U+6A4B, U+6BD4, U+6C60, U+6C7A, U+6D5C, U+6D77, U+6E0B, U+7389, U+7530, U+753A, U+767D, U+76E4, U+76EE, U+77E5, U+795E, U+798F, U+79CB, U+7AEF, U+7DDA, U+826F, U+8449, U+888B, U+897F, U+898B, U+8C37, U+8DEF, U+8F2A, U+8FBC, U+9053, U+90FD, U+91CC, U+91CE, U+958B, U+95A2, U+962A, U+9996, U+99AC, U+99C5, U+99D2, U+9AD8, U+9D28, U+9DAF, U+9ED2, U+FF08-FF09, U+FF1F, U+FF5E;
+}
+
+@font-face {
+  font-family: "Noto Sans JP";
+  src: url("fonts/noto-sans-jp-900-ext.woff2") format("woff2");
+  font-weight: 900;
   font-display: swap;
 }
 
@@ -10,6 +26,7 @@
   src: url("fonts/noto-sans-jp-900.woff2") format("woff2");
   font-weight: 900;
   font-display: swap;
+  unicode-range: U+20-7E, U+14C-14D, U+16B, U+2190, U+2192, U+2197, U+3005, U+3008-3009, U+300C-300F, U+301C, U+3041-3096, U+3099-30FF, U+4E00, U+4E0A, U+4E45, U+4E94, U+4EAC, U+4EE3, U+4FDD, U+5175, U+5317, U+5343, U+539F, U+53CD, U+53E4, U+540D, U+54C1, U+56DE, U+56F3, U+570F, U+5730, U+57DF, U+57FC, U+5834, U+585A, U+5927, U+5948, U+5BBF, U+5BFF, U+5C4B, U+5C71, U+5CA1, U+5D0E, U+5DDD, U+5DE3, U+5E4C, U+5EAB, U+5F92, U+5FA1, U+6075, U+611B, U+624B, U+65B0, U+65E5, U+66AE, U+6709, U+6728, U+672C-672D, U+6771, U+677E, U+697D, U+6A4B, U+6BD4, U+6C60, U+6C7A, U+6D5C, U+6D77, U+6E0B, U+7389, U+7530, U+753A, U+767D, U+76E4, U+76EE, U+77E5, U+795E, U+798F, U+79CB, U+7AEF, U+7DDA, U+826F, U+8449, U+888B, U+897F, U+898B, U+8C37, U+8DEF, U+8F2A, U+8FBC, U+9053, U+90FD, U+91CC, U+91CE, U+958B, U+95A2, U+962A, U+9996, U+99AC, U+99C5, U+99D2, U+9AD8, U+9D28, U+9DAF, U+9ED2, U+FF08-FF09, U+FF1F, U+FF5E;
 }
 
 @font-face {
@@ -18,23 +35,27 @@
   font-weight: 800;
   font-display: swap;
 }
+/* fonts:end */
 
 :root {
   color-scheme: light dark;
   /* 部屋 (ダークで変わる) */
   --bg: #ffffff;
   --text: #222222;
-  --eyebrow: #4e7a0f;
   --focus: #0070ff;
   --focus-on-paper: #0070ff;
   --wheel-shadow: 0 0 0 1px rgba(34, 34, 34, .05), 0 16px 32px -16px rgba(34, 34, 34, .4);
   --card-shadow: 0 1px 0 rgba(34, 34, 34, .04), 0 12px 28px -18px rgba(34, 34, 34, .45);
+  /* 路線の色 (JS が選んだ路線の色で上書きする。初期値 = 山手線 #80c241 を lineTheme に通した値) */
+  --jy: #80c241;
+  --jy-deep: #5c8c2f;
+  --jy-ink: #222222;
+  --jy-text: #4a7126;
+  --jy-soft: #dbeeca;
+  --jy-fill: #80c241; /* 小さい文字を乗せる塗り (文字と 4.5:1) */
+  --jy-fill-ink: #222222;
+  --jy-ring: transparent; /* ダークで形を見せる縁 (背景と 3:1 に届かない色だけ) */
   /* 物 (ダークでも同じ色) */
-  --jy: #9acd32;
-  --jy-deep: #6f9a22;
-  --jy-ink: #1f2a10;
-  --jy-text: #4e7a0f;
-  --jy-soft: #dcefb6;
   --ink: #222222;
   --sub: #606566;
   --line: #e3e8e8;
@@ -61,6 +82,8 @@
   --btn-off-edge: #c9cfcf;
   --font-ja: "Noto Sans JP", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
   --font-latin: "League Spartan", "Helvetica Neue", Arial, var(--font-ja);
+  /* プルダウンは端末の標準フォント: 選択肢の字を測るときに同梱の追加フォントを読ませない (仕様 §6-1) */
+  --font-ui: system-ui, -apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", Meiryo, sans-serif;
   --name-max: 44px;
   --name-row: 54px;
 }
@@ -69,7 +92,6 @@
   :root {
     --bg: #16181b;
     --text: #f2f2f2;
-    --eyebrow: #9acd32;
     --focus: #4da3ff;
     --wheel-shadow: 0 0 0 1px rgba(255, 255, 255, .06), 0 18px 36px -16px rgba(0, 0, 0, .9);
     --card-shadow: 0 14px 30px -18px rgba(0, 0, 0, .9);
@@ -110,39 +132,114 @@ body {
     max(16px, env(safe-area-inset-left));
 }
 
-/* 見出し: 英字の小見出し + 極太のタイトル + 紙吹雪 */
+/* 見出し: 1 段目に「地域」「路線」のピル、2 段目に「{路線}ルーレット」+ 紙吹雪 */
 .head {
   grid-area: head;
-  display: flex;
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  /* 2 段目の高さは紙吹雪の高さで固定 (長い見出しで紙吹雪を消しても、盤の大きさが変わらない) */
+  grid-template-rows: auto 40px;
+  grid-template-areas:
+    "pickers pickers"
+    "title confetti";
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  column-gap: 12px;
+  row-gap: 6px;
+  --title-room: 132px; /* 紙吹雪 120px + 間 12px */
 }
 
-.head-text { flex: none; }
+/* 見出しが 13 文字以上の路線: 紙吹雪を出さず、見出しに 1 段ぜんぶを使う */
+.head.is-long-title {
+  grid-template-areas:
+    "pickers pickers"
+    "title title";
+  --title-room: 0px;
+}
+.head.is-long-title .confetti { display: none; }
 
-.eyebrow {
-  margin: 0 0 2px;
-  font: 800 11px/1 var(--font-latin);
-  letter-spacing: .22em;
-  color: var(--eyebrow);
+.pickers {
+  grid-area: pickers;
+  display: flex;
+  gap: 8px;
+  min-width: 0;
 }
 
-.title {
+.picker {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 32px;
+  min-width: 0;
+  border-radius: 999px;
+}
+
+.picker select {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 100%;
+  min-width: 0;
+  max-width: 100%;
   margin: 0;
-  font-size: 22px;
+  padding: 0 28px 0 14px;
+  border: 0;
+  border-radius: inherit;
+  background: transparent;
+  color: inherit;
+  font: 800 13px/1 var(--font-ui);
+  letter-spacing: .02em;
+  text-overflow: ellipsis;
+  cursor: pointer;
+}
+
+.picker select:focus { outline: none; }
+.picker:focus-within { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* ▼ (文字の色で描く) */
+.picker::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  margin-top: -2px;
+  border: 5px solid transparent;
+  border-top-color: currentColor;
+  border-bottom: 0;
+  pointer-events: none;
+}
+
+.picker-region { flex: none; background: var(--yellow); color: var(--ink); }
+.picker-line { flex: 0 1 auto; background: var(--jy-fill); color: var(--jy-fill-ink); }
+.picker-line select { width: 100%; }
+.pickers.is-locked .picker { opacity: .55; }
+.pickers.is-locked select { cursor: default; }
+
+/* タイトルは 1 行。長い路線名は、紙吹雪の分 (--title-room) を引いた幅に収まるまで小さく */
+.title {
+  grid-area: title;
+  min-width: 0;
+  margin: 0;
+  /* cqi が無いブラウザ (iOS 15 など): 見出しの幅 = 画面の幅 - 左右の余白 で見積もる */
+  font-size: min(22px, calc((100vw - 32px - var(--title-room)) / var(--title-fit, 8)));
   font-weight: 900;
   line-height: 1.25;
   letter-spacing: .02em;
   white-space: nowrap;
+  /* 見積もりが外れても横にはみ出さない */
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-/* 狭い画面ではタイトルを折らずに、紙吹雪の方を縮める */
+@supports (width: 1cqi) {
+  .title { font-size: min(22px, calc((100cqi - var(--title-room)) / var(--title-fit, 8))); }
+}
+
+/* 狭い画面では紙吹雪の方を縮める */
 .confetti {
-  flex: 0 1 120px;
+  grid-area: confetti;
   min-width: 0;
   width: 120px;
-  height: 48px;
+  height: 40px;
 }
 
 .cf-red { fill: var(--red); }
@@ -206,13 +303,18 @@ body {
 .slice:nth-child(6n + 4) { fill: var(--p4); }
 .slice:nth-child(6n + 5) { fill: var(--p5); }
 .slice:nth-child(6n) { fill: var(--p6); }
-.slice.is-picked { fill: var(--jy); }
+.slice.is-picked { fill: var(--jy-fill); }
+.label.is-picked { fill: var(--jy-fill-ink); }
 
 .divider { stroke: var(--paper); stroke-width: 1.4; }
 
 .label { fill: var(--ink); font-weight: 700; }
 
 .rim { fill: none; stroke: var(--jy); stroke-width: 16; }
+/* ダークで外周の形を見せる縁 (--jy-ring が透明でない路線だけ見える) */
+.rim-ring { fill: none; stroke: transparent; stroke-width: 2; }
+/* 端がある路線: 最後の駅と最初の駅の間で外周の線を切る */
+.rim-break { stroke: var(--paper); stroke-width: 5; }
 
 .dot { fill: var(--station); stroke: var(--station-stroke); stroke-width: 1.4; }
 
@@ -249,7 +351,7 @@ body {
     "name name name"
     "romaji romaji romaji"
     "band band band"
-    "left . right";
+    "sides sides sides";
   align-items: center;
   padding: 12px 16px 10px;
   background: var(--paper);
@@ -270,15 +372,19 @@ body {
   height: 20px;
   padding: 1px 9px 0;
   border-radius: 999px;
-  background: var(--yellow);
+  background: var(--jy-fill);
+  color: var(--jy-fill-ink);
   font: 800 13px/1 var(--font-latin);
   letter-spacing: .06em;
 }
 
+.plate:not(.has-code) .plate-code { visibility: hidden; }
+
 .plate-kana {
   grid-area: kana;
   min-height: 20px;
-  font-size: 12px;
+  /* cqi が無いブラウザ: プレートの中の幅 = 画面の幅 - 余白 64px で見積もる */
+  font-size: min(12px, calc((100vw - 64px - 132px) / var(--kana-fit, 4)));
   line-height: 20px;
   letter-spacing: var(--kana-track, .3em);
   padding-left: var(--kana-track, .3em);
@@ -339,10 +445,21 @@ body {
 
 .plate-romaji {
   grid-area: romaji;
+  min-width: 0;
   min-height: 18px;
   text-align: center;
   font: 800 15px/18px var(--font-latin);
+  /* cqi が無いブラウザ: プレートの中の幅 = 画面の幅 - 余白 64px で見積もる */
+  font-size: min(15px, calc((100vw - 64px) / var(--romaji-fit, 1)));
   letter-spacing: .05em;
+  /* 1 行のまま (折り返すとプレートが伸びて盤が動く)。長いときは小さく、それでも入らなければ … */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+@supports (width: 1cqi) {
+  .plate-romaji { font-size: min(15px, calc(100cqi / var(--romaji-fit, 1))); }
 }
 
 .plate-band {
@@ -354,17 +471,41 @@ body {
 }
 
 .plate-side {
+  min-width: 0;
+  max-width: 100%;
   min-height: 18px;
   display: flex;
   gap: 4px;
-  font-size: 12px;
+  /* cqi が無いブラウザ: 半分の幅 = (画面の幅 - 余白 64px) / 2 で見積もる */
+  font-size: clamp(9px, calc(((100vw - 64px) / 2 - 28px) / var(--side-fit, 1)), 12px);
   line-height: 18px;
   color: var(--sub);
   white-space: nowrap;
 }
 
-.plate-left { grid-area: left; justify-self: start; }
-.plate-right { grid-area: right; justify-self: end; }
+/* 長い駅名は、半分の幅 (矢印と左右の間を引く) に収まるまで小さく。9px でも入らなければ … */
+@supports (width: 1cqi) {
+  .plate-side { font-size: clamp(9px, calc((50cqi - 28px) / var(--side-fit, 1)), 12px); }
+}
+
+.plate-side-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* となりの駅の段は 1 段目 (よみ) の真ん中の列と切り離し、左右に半分ずつ */
+.plate-sides {
+  grid-area: sides;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: 8px;
+}
+
+.plate-left { justify-self: start; }
+.plate-right { justify-self: end; }
+/* 端がある路線の終点・始発: その側のとなりの駅は無い */
+.plate-side.is-void { visibility: hidden; }
 
 /* 結果が無い間 (最初・回転中): 駅名欄だけ薄く出し、他は隠す */
 .plate.is-empty .plate-name { color: var(--sub); }
@@ -406,6 +547,18 @@ body {
 .spin:active:not([aria-disabled="true"]) { transform: translateY(4px); box-shadow: 0 2px 0 var(--jy-deep); }
 .spin[aria-disabled="true"] { background: var(--btn-off); color: var(--btn-off-ink); box-shadow: 0 6px 0 var(--btn-off-edge); cursor: default; }
 .spin:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+
+/* 前回の路線を読み込むまで (最大 1.5 秒): 山手線が一瞬出ないように、見出しと盤を隠す (仕様 §0-2) */
+.is-restoring .head,
+.is-restoring .stage { visibility: hidden; }
+
+/* ダーク: 背景に溶ける路線の色 (紺など) は、ボタン・路線のピル・外周に縁を付ける (仕様 §0-3) */
+@media (prefers-color-scheme: dark) {
+  .picker-line { box-shadow: 0 0 0 2px var(--jy-ring); }
+  .spin { box-shadow: 0 0 0 2px var(--jy-ring), 0 6px 0 var(--jy-deep); }
+  .spin:active:not([aria-disabled="true"]) { box-shadow: 0 0 0 2px var(--jy-ring), 0 2px 0 var(--jy-deep); }
+  .rim-ring { stroke: var(--jy-ring); }
+}
 
 /* 紙吹雪 (止まったとき) */
 .burst {
@@ -453,8 +606,13 @@ body {
     padding-top: max(8px, env(safe-area-inset-top));
     padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
-  .title { font-size: 20px; }
-  .confetti { height: 40px; }
+  .title { font-size: min(20px, calc((100vw - 32px - var(--title-room)) / var(--title-fit, 8))); }
+  @supports (width: 1cqi) {
+    .title { font-size: min(20px, calc((100cqi - var(--title-room)) / var(--title-fit, 8))); }
+  }
+  .confetti { height: 34px; }
+  .head { grid-template-rows: auto 34px; }
+  .picker { height: 30px; }
   .stage { padding-top: 12px; }
   .plate { padding: 8px 14px; }
   .plate-band { margin: 6px 0 4px; }
@@ -484,8 +642,18 @@ body {
 
   .plate-name { font-size: min(var(--name-max), calc(36vw / var(--fit, 2))); }
 
+  /* cqi が無いブラウザ: 右の列の幅 (左の盤 .55 の残り) で見積もる。横向きのスマホは見出し 20px まで */
+  .title { font-size: min(20px, calc(((min(100vw, 1080px) - 88px) * .44 - var(--title-room)) / var(--title-fit, 8))); }
+  .plate-kana { font-size: min(12px, calc(((min(100vw, 1080px) - 88px) * .44 - 44px - 132px) / var(--kana-fit, 4))); }
+  .plate-romaji { font-size: min(15px, calc(((min(100vw, 1080px) - 88px) * .44 - 44px) / var(--romaji-fit, 1))); }
+  .plate-side { font-size: clamp(9px, calc((((min(100vw, 1080px) - 88px) * .44 - 44px) / 2 - 28px) / var(--side-fit, 1)), 12px); }
+
   @supports (width: 1cqi) {
     .plate-name { font-size: min(var(--name-max), calc(90cqi / var(--fit, 2))); }
+    .title { font-size: min(20px, calc((100cqi - var(--title-room)) / var(--title-fit, 8))); }
+    .plate-kana { font-size: min(12px, calc((100cqi - 132px) / var(--kana-fit, 4))); }
+    .plate-romaji { font-size: min(15px, calc(100cqi / var(--romaji-fit, 1))); }
+    .plate-side { font-size: clamp(9px, calc((50cqi - 28px) / var(--side-fit, 1)), 12px); }
   }
 }
 
@@ -496,7 +664,10 @@ body {
 
 @media (min-width: 860px) {
   :root { --name-max: 60px; --name-row: 74px; }
-  .title { font-size: 28px; }
+  .title { font-size: min(28px, calc(((min(100vw, 1080px) - 88px) * .44 - var(--title-room)) / var(--title-fit, 8))); }
+  @supports (width: 1cqi) {
+    .title { font-size: min(28px, calc((100cqi - var(--title-room)) / var(--title-fit, 8))); }
+  }
   .plate { padding: 16px 22px 12px; }
 }
 

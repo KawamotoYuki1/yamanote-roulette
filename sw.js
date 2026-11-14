@@ -3,7 +3,7 @@
  * ファイルごとにネットと混ぜない = 新旧のファイルが混ざらない。新しい版は CACHE を上げて公開すると、
  * 次に開いたときに裏でまるごと取り込まれ、その次に開いたときから使われる。
  */
-const CACHE = 'yr-v1';
+const CACHE = 'yr-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -11,9 +11,15 @@ const ASSETS = [
   './js/app.js',
   './js/roulette.js',
   './js/stations.js',
+  './js/color.js',
+  './js/wheel.js',
+  './js/names.js',
+  './data/lines.json',
   './manifest.webmanifest',
   './fonts/noto-sans-jp-700.woff2',
   './fonts/noto-sans-jp-900.woff2',
+  './fonts/noto-sans-jp-700-ext.woff2',
+  './fonts/noto-sans-jp-900-ext.woff2',
   './fonts/league-spartan-800.woff2',
   './icons/favicon.svg',
   './icons/icon-192.png',

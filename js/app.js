@@ -1,27 +1,46 @@
 import { STATIONS } from './stations.js';
 import {
-  SPIN, randomIndex, randomUnit, indexAt, planSpin, easeOutQuart, sliceAngle, sides,
+  SPIN, randomIndex, randomUnit, indexAt, planSpin, easeOutQuart, sliceAngle, sides, jitterLimit,
 } from './roulette.js';
+import { lineTheme } from './color.js';
+import { mainKana, mainRomaji } from './names.js';
+import {
+  VIEW, GEO, COLUMN_OFFSET, labelLayout,
+} from './wheel.js';
 
-const N = STATIONS.length;
-const STEP = 360 / N;
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MAP_URL = 'https://www.google.com/maps/search/?api=1&query=';
-/**
- * 盤の寸法 (viewBox -164..164 の単位)。
- * 外周の帯 130..146 (中心線 138) / 駅名は 124 から内へ / 中心の円 26。上の余白に電車の顔が乗る
- */
-const VIEW = 328;
-const GEO = Object.freeze({
-  outer: 146, rim: 138, sliceOuter: 130, hub: 26, textOuter: 124, fontMax: 15, fontMin: 7,
+const DATA_URL = './data/lines.json';
+/** 盤に駅名を書くのは、この数までの路線 (仕様 §0-4) */
+const LABEL_MAX = 40;
+/** 見出しがこの文字数以上なら、紙吹雪の飾りを出さずに見出しに 1 段ぜんぶを使う (仕様 §0-2) */
+const LONG_TITLE = 13;
+const STORE = { region: 'yr:region', line: 'yr:line' };
+/** 最初の路線 (データが読めないときもこれで動く) */
+const DEFAULT_LINE = Object.freeze({
+  id: 'l11302',
+  name: '山手線',
+  short: '山手線',
+  operator: 'JR東日本',
+  type: '2',
+  color: '#80c241',
+  loop: true,
+  prefs: ['東京'],
+  stations: STATIONS,
 });
-const HALF_TAN = Math.tan(((STEP / 2) * Math.PI) / 180);
 const SMALL_KANA = new Set('ぁぃぅぇぉっゃゅょゎァィゥェォッャュョヮ');
+/** 縦書きで 90° 回す字 (長音・括弧・波線) */
+const TURN = new Set('ー（）〈〉「」『』〜～');
 const BURST_PIECES = 28;
 const BURST_SHAPES = ['c', 't', 'h'];
 
 const $ = (id) => document.getElementById(id);
 const ui = {
+  head: document.querySelector('.head'),
+  pickers: document.querySelector('.pickers'),
+  region: $('pick-region'),
+  line: $('pick-line'),
+  title: $('title'),
   wheel: $('wheel'),
   dial: $('dial'),
   train: $('train'),
@@ -52,42 +71,64 @@ function polar(r, deg) {
   return [r3(r * Math.sin(a)), r3(-r * Math.cos(a))];
 }
 
+function storeGet(key) {
+  try { return window.localStorage.getItem(key); } catch { return null; }
+}
+
+function storeSet(key, value) {
+  try { window.localStorage.setItem(key, value); } catch { /* 保存できない端末では覚えない */ }
+}
+
+// ---- いまの路線と盤 ----
+let line = DEFAULT_LINE;
+let n = 0;
+let step = 0;
+let parts = { slices: [], labels: [] };
+let rotation = 0;
+let spinning = false;
+let picked = -1;
+let trainAnimation = null;
+let mapLink = null;
+let announceTimer = 0;
+let data = null;
+let region = '東京';
+
+const setRotation = (deg) => { ui.dial.style.transform = `rotate(${deg}deg)`; };
+
 function slicePath(i) {
-  const a0 = sliceAngle(i, N) - STEP / 2;
-  const a1 = sliceAngle(i, N) + STEP / 2;
+  const a0 = sliceAngle(i, n) - step / 2;
+  const a1 = sliceAngle(i, n) + step / 2;
   const [x0, y0] = polar(GEO.hub, a0);
   const [x1, y1] = polar(GEO.sliceOuter, a0);
   const [x2, y2] = polar(GEO.sliceOuter, a1);
   const [x3, y3] = polar(GEO.hub, a1);
-  return `M${x0} ${y0}L${x1} ${y1}A${GEO.sliceOuter} ${GEO.sliceOuter} 0 0 1 ${x2} ${y2}`
-    + `L${x3} ${y3}A${GEO.hub} ${GEO.hub} 0 0 0 ${x0} ${y0}Z`;
+  const large = step > 180 ? 1 : 0;
+  return `M${x0} ${y0}L${x1} ${y1}A${GEO.sliceOuter} ${GEO.sliceOuter} 0 ${large} 1 ${x2} ${y2}`
+    + `L${x3} ${y3}A${GEO.hub} ${GEO.hub} 0 ${large} 0 ${x0} ${y0}Z`;
 }
 
-/** 縦書きの駅名がマスに収まる最大の文字サイズ */
-function labelFontSize(length) {
-  for (let fs = GEO.fontMax; fs >= GEO.fontMin; fs -= 0.25) {
-    const innerEdge = GEO.textOuter - length * fs;
-    if (innerEdge >= GEO.hub + 4 && innerEdge * HALF_TAN >= fs / 2 + 0.6) return fs;
-  }
-  return GEO.fontMin;
-}
-
+/** 盤の駅名 (仕様 §0-4): 1 列か 2 列の縦書き。2 列は右の列から読む */
 function buildLabel(name, i) {
-  const chars = [...name];
-  const fs = labelFontSize(chars.length);
-  const group = svgEl('g', { class: 'label', transform: `rotate(${r3(sliceAngle(i, N))})`, 'font-size': fs });
-  chars.forEach((ch, k) => {
-    const y = r3(-(GEO.textOuter - fs * (k + 0.5)));
-    const text = svgEl('text', { x: 0, y, 'text-anchor': 'middle', 'dominant-baseline': 'central' });
-    text.textContent = ch;
-    if (ch === 'ー') text.setAttribute('transform', `rotate(90 0 ${y})`);
-    else if (SMALL_KANA.has(ch)) text.setAttribute('transform', `translate(${r3(fs * 0.14)} ${r3(-fs * 0.14)})`);
-    group.append(text);
+  const { cols, fs } = labelLayout(name, n);
+  const group = svgEl('g', { class: 'label', transform: `rotate(${r3(sliceAngle(i, n))})`, 'font-size': fs });
+  cols.forEach((chars, c) => {
+    const x = cols.length === 1 ? 0 : r3((c === 0 ? 1 : -1) * fs * COLUMN_OFFSET);
+    chars.forEach((ch, k) => {
+      const y = r3(-(GEO.textOuter - fs * (k + 0.5)));
+      const text = svgEl('text', { x, y, 'text-anchor': 'middle', 'dominant-baseline': 'central' });
+      text.textContent = ch;
+      if (TURN.has(ch)) text.setAttribute('transform', `rotate(90 ${x} ${y})`);
+      else if (SMALL_KANA.has(ch)) text.setAttribute('transform', `translate(${r3(fs * 0.14)} ${r3(-fs * 0.14)})`);
+      group.append(text);
+    });
   });
   return group;
 }
 
+/** 盤を、いまの路線の駅の数で作り直す */
 function buildWheel() {
+  n = line.stations.length;
+  step = 360 / n;
   const half = VIEW / 2;
   const svg = svgEl('svg', {
     viewBox: `${-half} ${-half} ${VIEW} ${VIEW}`, focusable: 'false', 'aria-hidden': 'true',
@@ -95,50 +136,52 @@ function buildWheel() {
   const groups = {
     slices: svgEl('g'), dividers: svgEl('g'), labels: svgEl('g'), dots: svgEl('g'),
   };
-  const parts = { slices: [], labels: [] };
-  STATIONS.forEach((station, i) => {
+  const next = { slices: [], labels: [] };
+  const withLabels = n <= LABEL_MAX;
+  // 外周の駅の丸は、隣とくっつかない大きさまで小さく
+  const dotR = r3(Math.min(3.8, ((2 * Math.PI * GEO.rim) / n) * 0.28));
+  line.stations.forEach((station, i) => {
     const slice = svgEl('path', { d: slicePath(i), class: 'slice' });
-    const edge = sliceAngle(i, N) - STEP / 2;
+    const edge = sliceAngle(i, n) - step / 2;
     const [x0, y0] = polar(GEO.hub, edge);
     const [x1, y1] = polar(GEO.sliceOuter, edge);
-    const label = buildLabel(station.name, i);
-    const [cx, cy] = polar(GEO.rim, sliceAngle(i, N));
+    const [cx, cy] = polar(GEO.rim, sliceAngle(i, n));
     groups.slices.append(slice);
-    groups.dividers.append(svgEl('line', {
-      x1: x0, y1: y0, x2: x1, y2: y1, class: 'divider',
-    }));
-    groups.labels.append(label);
+    if (n > 1) {
+      groups.dividers.append(svgEl('line', {
+        x1: x0, y1: y0, x2: x1, y2: y1, class: 'divider',
+      }));
+    }
+    const label = withLabels ? buildLabel(station.name, i) : null;
+    if (label) groups.labels.append(label);
     groups.dots.append(svgEl('circle', {
-      cx, cy, r: 3.8, class: 'dot',
+      cx, cy, r: dotR, class: 'dot',
     }));
-    parts.slices.push(slice);
-    parts.labels.push(label);
+    next.slices.push(slice);
+    next.labels.push(label);
   });
-  svg.append(
-    groups.slices,
-    groups.dividers,
-    groups.labels,
-    svgEl('circle', { r: GEO.rim, class: 'rim' }),
-    groups.dots,
-    svgEl('circle', { r: GEO.hub, class: 'hub' }),
-  );
-  ui.dial.append(svg);
-  return parts;
+  // 外周の帯の外側に、ダークで形を見せる縁 (切れ目の線より先に描き、切れ目が縁も切る)
+  svg.append(groups.slices, groups.dividers, groups.labels, svgEl('circle', { r: GEO.rim, class: 'rim' }), svgEl('circle', { r: GEO.outer, class: 'rim-ring' }));
+  // 端がある路線: 最後の駅と最初の駅の間、とデータの切れ目 (線路がつながっていない所) で外周の線を切る
+  if (!line.loop) {
+    const cuts = [step / 2, ...(line.breaks || []).map((k) => sliceAngle(k, n) - step / 2)];
+    for (const angle of cuts) {
+      const [bx0, by0] = polar(GEO.sliceOuter - 2, angle);
+      const [bx1, by1] = polar(GEO.outer + 2, angle);
+      svg.append(svgEl('line', {
+        x1: bx0, y1: by0, x2: bx1, y2: by1, class: 'rim-break',
+      }));
+    }
+  }
+  svg.append(groups.dots, svgEl('circle', { r: GEO.hub, class: 'hub' }));
+  ui.dial.replaceChildren(svg);
+  parts = next;
 }
-
-const parts = buildWheel();
-let rotation = 0;
-let spinning = false;
-let picked = -1;
-let trainAnimation = null;
-let mapLink = null;
-
-const setRotation = (deg) => { ui.dial.style.transform = `rotate(${deg}deg)`; };
 
 function setPicked(i, on) {
   if (i < 0) return;
-  parts.slices[i].classList.toggle('is-picked', on);
-  parts.labels[i].classList.toggle('is-picked', on);
+  parts.slices[i]?.classList.toggle('is-picked', on);
+  parts.labels[i]?.classList.toggle('is-picked', on);
 }
 
 /** マスの境目を越えるたびに、電車の顔が振り子のように揺れる */
@@ -196,8 +239,6 @@ function ensureMapLink() {
   return mapLink;
 }
 
-let announceTimer = 0;
-
 /** 読み上げ: 一度空にしてから入れる (同じ駅が続いても読ませる)。次の回転が始まったら取り消す */
 function announce(message) {
   window.clearTimeout(announceTimer);
@@ -224,34 +265,65 @@ function setKana(kana) {
   else if (length <= 7) track = 0.15;
   ui.kana.textContent = kana;
   ui.kana.style.setProperty('--kana-track', `${track}em`);
-  ui.kana.style.setProperty('--kana-fit', String(r3(length * (1 + track))));
+  ui.kana.style.setProperty('--kana-fit', String(r3(Math.max(1, length) * (1 + track))));
+}
+
+/** ローマ字: 1 行。長いときは幅に収まるまで小さく (欧文 0.68 字・和文 1.05 字で見積もる) */
+function setRomaji(text) {
+  ui.romaji.textContent = text;
+  const fit = [...text].reduce((sum, ch) => sum + (ch.codePointAt(0) < 0x2000 ? 0.68 : 1.05), 0);
+  ui.romaji.style.setProperty('--romaji-fit', String(r3(Math.max(1, fit))));
+}
+
+/** となりの駅: 半分の幅に収まるまで小さく (12〜9px)。それでも入らなければ … (CSS) */
+function setSide(el, index) {
+  const name = index >= 0 ? line.stations[index].name : '';
+  el.textContent = name;
+  el.parentElement.style.setProperty('--side-fit', String(Math.max(1, [...name].length)));
+  el.parentElement.classList.toggle('is-void', index < 0);
+}
+
+/** 結果を消して、駅名欄を「？」(最初の状態) に戻す */
+function resetPlate() {
+  window.clearTimeout(announceTimer);
+  ui.plate.classList.remove('is-revealed', 'has-code');
+  ui.plate.classList.add('is-empty');
+  for (const el of [ui.code, ui.kana, ui.romaji, ui.left, ui.right, ui.announce]) el.textContent = '';
+  setName('？');
 }
 
 /** 回している間: 結果を消し、駅名欄に針の下の駅名だけを薄く流す */
 function startRolling() {
-  window.clearTimeout(announceTimer);
-  ui.plate.classList.remove('is-revealed');
-  ui.plate.classList.add('is-empty');
-  for (const el of [ui.code, ui.kana, ui.romaji, ui.left, ui.right, ui.announce]) el.textContent = '';
-  setName(STATIONS[indexAt(rotation, N)].name);
+  resetPlate();
+  setName(line.stations[indexAt(rotation, n)].name);
 }
 
 function showStation(i) {
-  const station = STATIONS[i];
+  const station = line.stations[i];
   ui.plate.classList.remove('is-empty', 'is-revealed');
-  ui.code.textContent = station.code;
-  setKana(station.kana);
+  ui.plate.classList.toggle('has-code', Boolean(station.code));
+  ui.code.textContent = station.code || '';
+  // よみ・ローマ字の行は副駅名・英語の説明を外して本体だけ (駅名標のように・仕様 §4)
+  setKana(mainKana(station.name, station.kana || ''));
   setName(station.name);
-  ui.romaji.textContent = station.romaji;
-  const { left, right } = sides(i, N);
-  ui.left.textContent = STATIONS[left].name;
-  ui.right.textContent = STATIONS[right].name;
+  setRomaji(mainRomaji(station.romaji || ''));
+  const { left, right } = sides(i, n, line.loop, line.breaks || []);
+  setSide(ui.left, left);
+  setSide(ui.right, right);
   const link = ensureMapLink();
-  link.href = MAP_URL + encodeURIComponent(`JR${station.name}駅`);
-  link.setAttribute('aria-label', `${station.name}駅を地図で見る`);
+  // 地図 (仕様 §4): 駅名で検索せず、駅の座標にピンを立てる
+  link.href = MAP_URL + encodeURIComponent(station.at.join(','));
+  // 路面電車 (type 4) は停留場なので「駅」を付けない
+  link.setAttribute('aria-label', `${station.name}${line.type === '4' ? '' : '駅'}を地図で見る（新しいタブで開きます）`);
   void ui.plate.offsetWidth;
   ui.plate.classList.add('is-revealed');
-  announce(`${station.name}（${station.kana}）に決まりました`);
+  announce(station.kana ? `${station.name}（${station.kana}）に決まりました` : `${station.name}に決まりました`);
+}
+
+function lockPickers(locked) {
+  ui.pickers.classList.toggle('is-locked', locked);
+  ui.region.disabled = locked;
+  ui.line.disabled = locked;
 }
 
 function finish(target) {
@@ -265,22 +337,24 @@ function finish(target) {
   ui.wheel.classList.remove('is-spinning');
   ui.spin.removeAttribute('aria-disabled');
   ui.spin.textContent = 'もう一回';
+  lockPickers(false);
   if (typeof navigator.vibrate === 'function') navigator.vibrate(18);
 }
 
 function spin() {
-  if (spinning) return;
+  if (spinning || document.documentElement.classList.contains('is-restoring')) return;
   spinning = true;
   ui.spin.setAttribute('aria-disabled', 'true');
   ui.wheel.classList.add('is-spinning');
+  lockPickers(true);
   setPicked(picked, false);
 
-  const target = randomIndex(N);
-  const jitter = (randomUnit() * 2 - 1) * SPIN.jitterDeg;
+  const target = randomIndex(n);
+  const jitter = (randomUnit() * 2 - 1) * jitterLimit(n);
   const instant = reduceMotion.matches;
   const from = rotation;
   const end = planSpin({
-    from, target, n: N, turns: instant ? 0 : SPIN.turns, jitter,
+    from, target, n, turns: instant ? 0 : SPIN.turns, jitter,
   });
 
   if (instant) {
@@ -291,16 +365,16 @@ function spin() {
 
   startRolling();
   const startedAt = performance.now();
-  let lastEdge = Math.floor((from + STEP / 2) / STEP);
+  let lastEdge = Math.floor((from + step / 2) / step);
   const frame = (now) => {
     const p = Math.min(1, Math.max(0, (now - startedAt) / SPIN.durationMs));
     rotation = from + (end - from) * easeOutQuart(p);
     setRotation(rotation);
-    const edge = Math.floor((rotation + STEP / 2) / STEP);
+    const edge = Math.floor((rotation + step / 2) / step);
     if (edge !== lastEdge) {
       lastEdge = edge;
       swingTrain();
-      setName(STATIONS[indexAt(rotation, N)].name);
+      setName(line.stations[indexAt(rotation, n)].name);
     }
     if (p < 1) window.requestAnimationFrame(frame);
     else finish(target);
@@ -316,9 +390,141 @@ function onWheelClick(event) {
   if (Math.hypot(dx, dy) <= (box.width * GEO.outer) / VIEW) spin();
 }
 
+/** 路線を切り替える: 盤を作り直し、色・タイトルを変え、プレートとボタンを最初に戻す */
+function setLine(next) {
+  if (spinning) return;
+  line = next;
+  rotation = 0;
+  picked = -1;
+  buildWheel();
+  setRotation(0);
+  for (const [key, value] of Object.entries(lineTheme(line.color))) {
+    document.documentElement.style.setProperty(key, value);
+  }
+  const title = `${line.short}ルーレット`;
+  ui.title.textContent = title;
+  ui.title.style.setProperty('--title-fit', String([...title].length));
+  ui.head.classList.toggle('is-long-title', [...title].length >= LONG_TITLE);
+  document.title = title;
+  ui.wheel.setAttribute('aria-label', `${line.name}の${n}駅のルーレット盤`);
+  resetPlate();
+  ui.spin.textContent = '回す';
+}
+
+// ---- 地域・路線のプルダウン ----
+const linesIn = (pref) => data.lines.filter((l) => l.prefs.includes(pref));
+
+function fillRegions() {
+  ui.region.replaceChildren(...data.regions.map((area) => {
+    const group = document.createElement('optgroup');
+    group.label = area.area;
+    group.append(...area.prefs.map((pref) => new Option(pref, pref)));
+    return group;
+  }));
+}
+
+function fillLines(pref) {
+  const groups = new Map();
+  for (const l of linesIn(pref)) {
+    if (!groups.has(l.operator)) groups.set(l.operator, []);
+    groups.get(l.operator).push(l);
+  }
+  ui.line.replaceChildren(...[...groups].map(([operator, list]) => {
+    const group = document.createElement('optgroup');
+    group.label = operator;
+    group.append(...list.map((l) => new Option(l.name, l.id)));
+    return group;
+  }));
+}
+
+/** 地域を変えたときの路線 (仕様 §0-2): keepId の路線がその地域にもあればそれ、なければデータの defaults */
+function lineFor(pref, keepId) {
+  const available = linesIn(pref);
+  return available.find((l) => l.id === keepId)
+    || available.find((l) => l.id === data.defaults?.[pref])
+    || available[0];
+}
+
+function chooseRegion(pref) {
+  region = pref;
+  fillLines(pref);
+  const next = lineFor(pref, line.id);
+  ui.line.value = next.id;
+  if (next.id !== line.id) setLine(next);
+  storeSet(STORE.region, pref);
+  storeSet(STORE.line, next.id);
+}
+
+// 回転中はプルダウンを押せないが、それでも変更が届いたら (端末の選択画面など) 元に戻して何もしない
+ui.region.addEventListener('change', () => {
+  if (spinning) { ui.region.value = region; return; }
+  chooseRegion(ui.region.value);
+});
+ui.line.addEventListener('change', () => {
+  const next = data?.lines.find((l) => l.id === ui.line.value);
+  if (spinning || !next) { ui.line.value = line.id; return; }
+  setLine(next);
+  storeSet(STORE.line, next.id);
+});
+
+async function loadLines() {
+  try {
+    const res = await fetch(DATA_URL, { priority: 'low' });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    data = await res.json();
+  } catch {
+    document.documentElement.classList.remove('is-restoring');
+    return; // 路線データが読めないときは山手線だけで動く
+  }
+  fillRegions();
+  const prefs = data.regions.flatMap((area) => area.prefs);
+  const savedPref = storeGet(STORE.region);
+  // 回している途中に読み終わったときは、いまの路線 (最初の山手線) のままにして、プルダウンもそれに合わせる
+  let pref = prefs.includes(savedPref) ? savedPref : '東京';
+  if (spinning) pref = line.prefs.find((p) => prefs.includes(p)) || '東京';
+  region = pref;
+  ui.region.value = pref;
+  fillLines(pref);
+  const first = spinning ? line : lineFor(pref, storeGet(STORE.line));
+  ui.line.value = first.id;
+  if (!spinning && (first.id !== line.id || first.stations.length !== n)) setLine(first);
+  document.documentElement.classList.remove('is-restoring');
+}
+
+/** 最初の描画 (first-contentful-paint) の後に fn を呼ぶ。描画の記録が取れないブラウザ・裏のタブでも 3 秒後には呼ぶ */
+function afterFirstPaint(fn) {
+  let done = false;
+  const run = () => {
+    if (done) return;
+    done = true;
+    window.setTimeout(fn, 0);
+  };
+  if (performance.getEntriesByName('first-contentful-paint').length) {
+    run();
+    return;
+  }
+  try {
+    // paint の記録は数回だけなので、見張りは付けたままにする (2 回目以降は run が何もしない)
+    new PerformanceObserver((list) => {
+      if (list.getEntriesByName('first-contentful-paint').length) run();
+    }).observe({ type: 'paint', buffered: true });
+  } catch { /* 描画の記録が取れないブラウザは 3 秒後 */ }
+  window.setTimeout(run, 3000);
+}
+
 ui.spin.addEventListener('click', spin);
 ui.wheel.addEventListener('click', onWheelClick);
-setRotation(rotation);
+setLine(DEFAULT_LINE);
+if (document.documentElement.classList.contains('is-restoring')) {
+  // 前回の路線 (山手線以外) を覚えているとき: index.html の先頭のスクリプトが最初の描画の前に見出しと盤を隠している。
+  // すぐに読み、読み終わったら出す (最大 1.5 秒。山手線が一瞬出ないように・仕様 §0-2)
+  window.setTimeout(() => document.documentElement.classList.remove('is-restoring'), 1500);
+  loadLines();
+} else {
+  // 初めて (山手線): 最初の画面を読み終え (load)、描いた (FCP) 後に読む (仕様 §6-1: 最初の画面のフォントと回線を取り合わない)
+  if (document.readyState === 'complete') afterFirstPaint(loadLines);
+  else window.addEventListener('load', () => afterFirstPaint(loadLines), { once: true });
+}
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
