@@ -13,7 +13,7 @@ function fits({ cols, fs }, n) {
   const halfTan = Math.tan(((Math.min(360 / n, 90) / 2) * Math.PI) / 180);
   const innerEdge = GEO.textOuter - Math.max(...cols.map((c) => c.length)) * fs;
   const halfWidth = cols.length === 1 ? fs / 2 : fs * 1.05;
-  return fs >= GEO.fontMin && innerEdge >= GEO.hub + 4 && innerEdge * halfTan >= halfWidth + 0.6;
+  return fs >= GEO.fontFloor && innerEdge >= GEO.hub + 4 && innerEdge * halfTan >= halfWidth + 0.6;
 }
 
 test('山手線: 30 駅とも 1 列で、v1 と同じ大きさ', () => {
@@ -25,23 +25,32 @@ test('山手線: 30 駅とも 1 列で、v1 と同じ大きさ', () => {
   }
 });
 
-test('データの全駅 (n ≤ 40 の路線) が、マスと中心の円からはみ出さずに書ける (仕様 §0-4)', () => {
+test('データの全駅 (全路線) が、マスと中心の円からはみ出さずに書ける (仕様 §0-4)', () => {
   let count = 0;
   for (const line of data.lines) {
     const n = line.stations.length;
-    if (n > 40) continue;
     for (const s of line.stations) {
       const layout = labelLayout(s.name, n);
       assert.ok(fits(layout, n), `${line.name} ${s.name} ${JSON.stringify(layout)}`);
       count += 1;
     }
   }
-  assert.ok(count > 4000, `駅の数 ${count}`);
+  assert.ok(count > 5000, `駅の数 ${count}`);
+});
+
+test('7 未満になるのは、7 でも入らない 2 駅だけ (5.5 まで・仕様 §0-4)', () => {
+  const small = [];
+  for (const line of data.lines) {
+    for (const s of line.stations) {
+      const { fs } = labelLayout(s.name, line.stations.length);
+      if (fs < GEO.fontMin) small.push(`${line.name} ${s.name} ${fs}`);
+    }
+  }
+  assert.deepEqual(small.sort(), ['東武伊勢崎線 とうきょうスカイツリー 5.5', '日豊本線 小波瀬西工大前 6.75'].sort());
 });
 
 test('2 列: 列の頭に ー・）や小さい字、列の終わりに （ が来ない・両方の列に字がある', () => {
   for (const line of data.lines) {
-    if (line.stations.length > 40) continue;
     for (const s of line.stations) {
       const { cols } = labelLayout(s.name, line.stations.length);
       if (cols.length !== 2) continue;
@@ -55,7 +64,6 @@ test('2 列: 列の頭に ー・）や小さい字、列の終わりに （ が�
 test('2 列にするのは 1 列で 9 未満・収まらないときだけ。1 列で 9 以上なら 1 列', () => {
   for (const line of data.lines) {
     const n = line.stations.length;
-    if (n > 40) continue;
     for (const s of line.stations) {
       const one = labelFontSize([...s.name].length, 360 / n, 1);
       const layout = labelLayout(s.name, n);
@@ -82,6 +90,11 @@ test('例: 長い駅名の書き方', () => {
   // 浅草線 (20 駅): 1 列 8.25 → 2 列で 9 以上
   assert.equal(show('押上（スカイツリー前）', 20).text.length, 2);
   assert.ok(show('押上（スカイツリー前）', 20).fs >= 9);
+  // 東武伊勢崎線 (55 駅): 〈〉 の副駅名も括弧と同じに外す
+  assert.deepEqual(show('押上〈スカイツリー前〉', 55).text, ['押上']);
+  assert.deepEqual(show('獨協大学前〈草加松原〉', 55).text, ['獨協大学前']);
+  // 半蔵門線 (14 駅): 9 以上で書けるなら外さない
+  assert.equal(show('押上〈スカイツリー前〉', 14).text.join(''), '押上〈スカイツリー前〉');
 });
 
 test('splitColumns: 真ん中で分け、ー や ・ を列の頭にしない', () => {

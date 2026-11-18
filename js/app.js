@@ -11,8 +11,6 @@ import {
 const SVG_NS = 'http://www.w3.org/2000/svg';
 const MAP_URL = 'https://www.google.com/maps/search/?api=1&query=';
 const DATA_URL = './data/lines.json';
-/** 盤に駅名を書くのは、この数までの路線 (仕様 §0-4) */
-const LABEL_MAX = 40;
 /** 見出しがこの文字数以上なら、紙吹雪の飾りを出さずに見出しに 1 段ぜんぶを使う (仕様 §0-2) */
 const LONG_TITLE = 13;
 const STORE = { region: 'yr:region', line: 'yr:line' };
@@ -137,7 +135,6 @@ function buildWheel() {
     slices: svgEl('g'), dividers: svgEl('g'), labels: svgEl('g'), dots: svgEl('g'),
   };
   const next = { slices: [], labels: [] };
-  const withLabels = n <= LABEL_MAX;
   // 外周の駅の丸は、隣とくっつかない大きさまで小さく
   const dotR = r3(Math.min(3.8, ((2 * Math.PI * GEO.rim) / n) * 0.28));
   line.stations.forEach((station, i) => {
@@ -152,8 +149,8 @@ function buildWheel() {
         x1: x0, y1: y0, x2: x1, y2: y1, class: 'divider',
       }));
     }
-    const label = withLabels ? buildLabel(station.name, i) : null;
-    if (label) groups.labels.append(label);
+    const label = buildLabel(station.name, i);
+    groups.labels.append(label);
     groups.dots.append(svgEl('circle', {
       cx, cy, r: dotR, class: 'dot',
     }));
