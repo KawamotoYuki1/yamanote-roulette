@@ -1,0 +1,14 @@
+{
+  "appId": "com.pokerlabinc.ekiroulette",
+  "appName": "駅ルーレット",
+  "webDir": "www",
+  "experimental": {
+    "ios": {
+      "spm": {
+        "packageOptions": {
+          "@capacitor-firebase/remote-config": { "symlink": true }
+        }
+      }
+    }
+  }
+}

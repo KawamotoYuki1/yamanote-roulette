@@ -11,7 +11,7 @@
   src: url("fonts/noto-sans-jp-700.woff2") format("woff2");
   font-weight: 700;
   font-display: swap;
-  unicode-range: U+20-7E, U+14C-14D, U+16B, U+2190, U+2192, U+2197, U+3005, U+3008-3009, U+300C-300F, U+301C, U+3041-3096, U+3099-30FF, U+4E00, U+4E0A, U+4E45, U+4E94, U+4EAC, U+4EE3, U+4FDD, U+5175, U+5317, U+5343, U+539F, U+53CD, U+53E4, U+540D, U+54C1, U+56DE, U+56F3, U+570F, U+5730, U+57DF, U+57FC, U+5834, U+585A, U+5927, U+5948, U+5BBF, U+5BFF, U+5C4B, U+5C71, U+5CA1, U+5D0E, U+5DDD, U+5DE3, U+5E4C, U+5EAB, U+5F92, U+5FA1, U+6075, U+611B, U+624B, U+65B0, U+65E5, U+66AE, U+6709, U+6728, U+672C-672D, U+6771, U+677E, U+697D, U+6A4B, U+6BD4, U+6C60, U+6C7A, U+6D5C, U+6D77, U+6E0B, U+7389, U+7530, U+753A, U+767D, U+76E4, U+76EE, U+77E5, U+795E, U+798F, U+79CB, U+7AEF, U+7DDA, U+826F, U+8449, U+888B, U+897F, U+898B, U+8C37, U+8DEF, U+8F2A, U+8FBC, U+9053, U+90FD, U+91CC, U+91CE, U+958B, U+95A2, U+962A, U+9996, U+99AC, U+99C5, U+99D2, U+9AD8, U+9D28, U+9DAF, U+9ED2, U+FF08-FF09, U+FF1F, U+FF5E;
+  unicode-range: U+20-7E, U+14C-14D, U+16B, U+2190, U+2192, U+2197, U+3005, U+3008-3009, U+300C-300F, U+301C, U+3041-3096, U+3099-30FF, U+4E00, U+4E0A, U+4E45, U+4E94, U+4EAC, U+4EE3, U+4FDD, U+5175, U+5317, U+5343, U+539F, U+53CD, U+53E4, U+540D, U+54C1, U+56DE, U+56F3, U+570F, U+5730, U+57DF, U+57FC, U+5834, U+585A, U+5927, U+5948, U+5BBF, U+5BFF, U+5C4B, U+5C71, U+5CA1, U+5D0E, U+5DDD, U+5DE3, U+5E4C, U+5EAB, U+5F92, U+5FA1, U+6075, U+611B, U+624B, U+65B0, U+65E5, U+66AE, U+6709, U+6728, U+672C-672D, U+6771, U+677E, U+697D, U+6A4B, U+6BD4, U+6C60, U+6C7A, U+6D5C, U+6D77, U+6E0B, U+7389, U+7530, U+753A, U+767D, U+76E4, U+76EE, U+77E5, U+795E, U+798F, U+79CB, U+7AEF, U+7DDA, U+826F, U+8449, U+888B, U+897F, U+898B, U+8C37, U+8DEF, U+8F2A, U+8FBC, U+9001, U+9053, U+90FD, U+91CC, U+91CE, U+958B, U+95A2, U+962A, U+9996, U+99AC, U+99C5, U+99D2, U+9AD8, U+9D28, U+9DAF, U+9ED2, U+FF08-FF09, U+FF1F, U+FF5E;
 }
 
 @font-face {
@@ -26,7 +26,7 @@
   src: url("fonts/noto-sans-jp-900.woff2") format("woff2");
   font-weight: 900;
   font-display: swap;
-  unicode-range: U+20-7E, U+14C-14D, U+16B, U+2190, U+2192, U+2197, U+3005, U+3008-3009, U+300C-300F, U+301C, U+3041-3096, U+3099-30FF, U+4E00, U+4E0A, U+4E45, U+4E94, U+4EAC, U+4EE3, U+4FDD, U+5175, U+5317, U+5343, U+539F, U+53CD, U+53E4, U+540D, U+54C1, U+56DE, U+56F3, U+570F, U+5730, U+57DF, U+57FC, U+5834, U+585A, U+5927, U+5948, U+5BBF, U+5BFF, U+5C4B, U+5C71, U+5CA1, U+5D0E, U+5DDD, U+5DE3, U+5E4C, U+5EAB, U+5F92, U+5FA1, U+6075, U+611B, U+624B, U+65B0, U+65E5, U+66AE, U+6709, U+6728, U+672C-672D, U+6771, U+677E, U+697D, U+6A4B, U+6BD4, U+6C60, U+6C7A, U+6D5C, U+6D77, U+6E0B, U+7389, U+7530, U+753A, U+767D, U+76E4, U+76EE, U+77E5, U+795E, U+798F, U+79CB, U+7AEF, U+7DDA, U+826F, U+8449, U+888B, U+897F, U+898B, U+8C37, U+8DEF, U+8F2A, U+8FBC, U+9053, U+90FD, U+91CC, U+91CE, U+958B, U+95A2, U+962A, U+9996, U+99AC, U+99C5, U+99D2, U+9AD8, U+9D28, U+9DAF, U+9ED2, U+FF08-FF09, U+FF1F, U+FF5E;
+  unicode-range: U+20-7E, U+14C-14D, U+16B, U+2190, U+2192, U+2197, U+3005, U+3008-3009, U+300C-300F, U+301C, U+3041-3096, U+3099-30FF, U+4E00, U+4E0A, U+4E45, U+4E94, U+4EAC, U+4EE3, U+4FDD, U+5175, U+5317, U+5343, U+539F, U+53CD, U+53E4, U+540D, U+54C1, U+56DE, U+56F3, U+570F, U+5730, U+57DF, U+57FC, U+5834, U+585A, U+5927, U+5948, U+5BBF, U+5BFF, U+5C4B, U+5C71, U+5CA1, U+5D0E, U+5DDD, U+5DE3, U+5E4C, U+5EAB, U+5F92, U+5FA1, U+6075, U+611B, U+624B, U+65B0, U+65E5, U+66AE, U+6709, U+6728, U+672C-672D, U+6771, U+677E, U+697D, U+6A4B, U+6BD4, U+6C60, U+6C7A, U+6D5C, U+6D77, U+6E0B, U+7389, U+7530, U+753A, U+767D, U+76E4, U+76EE, U+77E5, U+795E, U+798F, U+79CB, U+7AEF, U+7DDA, U+826F, U+8449, U+888B, U+897F, U+898B, U+8C37, U+8DEF, U+8F2A, U+8FBC, U+9001, U+9053, U+90FD, U+91CC, U+91CE, U+958B, U+95A2, U+962A, U+9996, U+99AC, U+99C5, U+99D2, U+9AD8, U+9D28, U+9DAF, U+9ED2, U+FF08-FF09, U+FF1F, U+FF5E;
 }
 
 @font-face {
@@ -125,10 +125,11 @@ body {
     "plate" auto
     "action" auto / minmax(0, 1fr);
   gap: 12px;
+  /* --ad-h = アプリの下のバナー広告の高さ (アプリでバナーを出しているときだけ。Web 版は 0) */
   padding:
     max(10px, env(safe-area-inset-top))
     max(16px, env(safe-area-inset-right))
-    max(16px, env(safe-area-inset-bottom))
+    calc(max(16px, env(safe-area-inset-bottom)) + var(--ad-h, 0px))
     max(16px, env(safe-area-inset-left));
 }
 
@@ -598,13 +599,135 @@ body {
   border: 0;
 }
 
+/* アプリ (iOS・Android) のときだけ出すもの: ⓘ・「このアプリについて」・「送る」。Web 版では出さない */
+.native-only { display: none; }
+
+.is-native .about-open {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--sub);
+  cursor: pointer;
+}
+.about-open svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.about-open:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+/* 結果が出たら「もう一回」の左に「送る」 (路線を変えるまで出したまま = 回すたびにボタンの幅が変わらない) */
+.is-native .action.has-share { display: flex; gap: 10px; }
+.is-native .action.has-share .share { display: block; }
+.action.has-share .spin { flex: 1; min-width: 0; }
+
+.share {
+  flex: none;
+  width: 88px;
+  height: 58px;
+  border: 2px solid var(--jy-soft);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--jy-text);
+  font: 900 16px/1 var(--font-ja);
+  letter-spacing: .1em;
+  text-indent: .1em;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+.share:active:not([aria-disabled="true"]) { background: var(--jy-soft); }
+.share[aria-disabled="true"] { opacity: .45; cursor: default; }
+.share:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+
+/* 「このアプリについて」: 画面いっぱい。文は端末の標準フォント (同梱フォントに字を足さない) */
+.is-native dialog.about[open] {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  inset: 0;
+  /* showModal の無い iOS 15.0〜15.3 は最前面に出ないので、紙吹雪 (z-index 10) より上に置く */
+  z-index: 20;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 15px/1.7 var(--font-ui);
+}
+.about::backdrop { background: var(--bg); }
+
+.about-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding:
+    max(10px, env(safe-area-inset-top))
+    max(12px, env(safe-area-inset-right))
+    10px
+    max(20px, env(safe-area-inset-left));
+  border-bottom: 1px solid var(--line);
+}
+.about-title { margin: 0; font: 800 17px/1.3 var(--font-ui); }
+.about-close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+.about-close svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; }
+.about-close:focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+.about-body {
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  /* バナー広告は dialog の上にも重なるので、最後の行がバナーの上までスクロールできるようにする */
+  padding:
+    8px
+    max(20px, env(safe-area-inset-right))
+    calc(max(24px, env(safe-area-inset-bottom)) + var(--ad-h, 0px))
+    max(20px, env(safe-area-inset-left));
+}
+.about-body p { margin: 10px 0; }
+.about-body h3 { margin: 24px 0 4px; font: 800 14px/1.4 var(--font-ui); color: var(--sub); }
+.about-app { font-weight: 800; font-size: 17px; }
+.about-license summary { cursor: pointer; color: var(--jy-text); }
+.about-license pre {
+  margin: 8px 0 0;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 400 11px/1.5 ui-monospace, Menlo, monospace;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.about-links { margin: 6px 0; padding-left: 20px; }
+.about-links a { color: var(--jy-text); }
+
 /* 背の低い画面 (Safari のツールバーが出ている iPhone SE など): すき間を詰めて盤を大きく残す */
 @media (max-height: 700px) and (max-width: 859px) {
   :root { --name-max: 36px; --name-row: 44px; }
   .app {
     gap: 8px;
     padding-top: max(8px, env(safe-area-inset-top));
-    padding-bottom: max(12px, env(safe-area-inset-bottom));
+    padding-bottom: calc(max(12px, env(safe-area-inset-bottom)) + var(--ad-h, 0px));
   }
   .title { font-size: min(20px, calc((100vw - 32px - var(--title-room)) / var(--title-fit, 8))); }
   @supports (width: 1cqi) {
@@ -616,7 +739,7 @@ body {
   .stage { padding-top: 12px; }
   .plate { padding: 8px 14px; }
   .plate-band { margin: 6px 0 4px; }
-  .spin { height: 52px; }
+  .spin, .share { height: 52px; }
   .action { padding-bottom: 5px; }
 }
 

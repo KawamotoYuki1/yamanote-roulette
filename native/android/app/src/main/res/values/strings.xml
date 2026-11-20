@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">駅ルーレット</string>
+    <string name="title_activity_main">駅ルーレット</string>
+    <string name="package_name">com.pokerlabinc.ekiroulette</string>
+    <string name="custom_url_scheme">com.pokerlabinc.ekiroulette</string>
+    <string name="admob_app_id">ca-app-pub-4798502599946388~1411264833</string>
+</resources>

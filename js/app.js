@@ -55,6 +55,15 @@ const ui = {
 };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+/** アプリ (iOS・Android) のとき: 広告・振動・送る・このアプリについて は js/native.js (アプリにだけ入る) が受け持つ */
+const isNative = document.documentElement.classList.contains('is-native');
+let native = null;
+let adShowing = false;
+Object.assign(ui, {
+  action: document.querySelector('.action'),
+  share: $('share'),
+});
+
 const r3 = (v) => Math.round(v * 1000) / 1000;
 
 function svgEl(tag, attrs = {}) {
@@ -335,12 +344,33 @@ function finish(target) {
   ui.spin.removeAttribute('aria-disabled');
   ui.spin.textContent = 'もう一回';
   lockPickers(false);
-  if (typeof navigator.vibrate === 'function') navigator.vibrate(18);
+  if (isNative) {
+    ui.action.classList.add('has-share');
+    ui.share.removeAttribute('aria-disabled');
+    native?.stopped();
+  } else if (typeof navigator.vibrate === 'function') navigator.vibrate(18);
 }
 
+/** 「回す」: アプリでは先に動画広告を出すかを決め (出すなら閉じるまで待ち)、それから回す */
 function spin() {
-  if (spinning || document.documentElement.classList.contains('is-restoring')) return;
+  if (spinning || adShowing || document.documentElement.classList.contains('is-restoring')) return;
+  if (!native) {
+    startSpin();
+    return;
+  }
+  adShowing = true;
+  ui.spin.setAttribute('aria-disabled', 'true');
+  ui.share.setAttribute('aria-disabled', 'true');
+  lockPickers(true);
+  Promise.resolve().then(() => native.beforeSpin()).catch(() => {}).finally(() => {
+    adShowing = false;
+    startSpin();
+  });
+}
+
+function startSpin() {
   spinning = true;
+  if (isNative) ui.share.setAttribute('aria-disabled', 'true');
   ui.spin.setAttribute('aria-disabled', 'true');
   ui.wheel.classList.add('is-spinning');
   lockPickers(true);
@@ -406,6 +436,7 @@ function setLine(next) {
   ui.wheel.setAttribute('aria-label', `${line.name}の${n}駅のルーレット盤`);
   resetPlate();
   ui.spin.textContent = '回す';
+  ui.action.classList.remove('has-share');
 }
 
 // ---- 地域・路線のプルダウン ----
@@ -454,14 +485,19 @@ function chooseRegion(pref) {
 
 // 回転中はプルダウンを押せないが、それでも変更が届いたら (端末の選択画面など) 元に戻して何もしない
 ui.region.addEventListener('change', () => {
-  if (spinning) { ui.region.value = region; return; }
+  if (spinning || adShowing) { ui.region.value = region; return; }
+  const before = region;
   chooseRegion(ui.region.value);
+  // 地域を変えたら、路線が同じまま (複数の都県を走る路線) でも「変えた」に数える (仕様 spec-app §2-2)
+  if (region !== before) native?.lineChanged();
 });
 ui.line.addEventListener('change', () => {
   const next = data?.lines.find((l) => l.id === ui.line.value);
-  if (spinning || !next) { ui.line.value = line.id; return; }
+  if (spinning || adShowing || !next) { ui.line.value = line.id; return; }
+  const before = line.id;
   setLine(next);
   storeSet(STORE.line, next.id);
+  if (line.id !== before) native?.lineChanged();
 });
 
 async function loadLines() {
@@ -523,7 +559,38 @@ if (document.documentElement.classList.contains('is-restoring')) {
   else window.addEventListener('load', () => afterFirstPaint(loadLines), { once: true });
 }
 
-if ('serviceWorker' in navigator) {
+if (isNative) {
+  ui.share.addEventListener('click', () => {
+    if (spinning || adShowing || picked < 0 || ui.share.getAttribute('aria-disabled') === 'true') return;
+    native?.share({ station: line.stations[picked].name, line: line.short });
+  });
+  // 「このアプリについて」: ライセンスの全文は開いたときに同梱のファイルから読む
+  // showModal は iOS 15.4 から。それより前 (アプリの対象は iOS 15.0 から) は open を付けて出す
+  const about = $('about');
+  $('about-open').addEventListener('click', () => {
+    if (about.hasAttribute('open')) return;
+    if (typeof about.showModal === 'function') about.showModal();
+    else about.setAttribute('open', '');
+  });
+  $('about-close').addEventListener('click', () => {
+    if (typeof about.close === 'function') about.close();
+    else about.removeAttribute('open');
+  });
+  for (const box of about.querySelectorAll('details[data-src]')) {
+    box.addEventListener('toggle', async () => {
+      const pre = box.querySelector('pre');
+      if (!box.open || pre.textContent) return;
+      try {
+        const res = await fetch(box.dataset.src);
+        // 元の文は 80 字ほどで改行してある → 段落の中の改行をつないで、画面の幅で折り返す
+        pre.textContent = res.ok ? (await res.text()).replace(/([^\n])\n(?!\n)/g, '$1 ') : '';
+      } catch { /* 読めなければ空のまま */ }
+    });
+  }
+  import('./native.js')
+    .then((mod) => { native = mod.start(); })
+    .catch(() => { /* 読めなくても広告なしで動く */ });
+} else if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./sw.js')
       .then(() => navigator.serviceWorker.controller?.postMessage('heal'))

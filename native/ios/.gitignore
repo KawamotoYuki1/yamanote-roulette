@@ -1,0 +1,19 @@
+App/build
+App/Pods
+App/output
+App/App/public
+DerivedData
+xcuserdata
+
+# Cordova plugins for Capacitor
+capacitor-cordova-ios-plugins
+
+# Generated Config files
+App/App/capacitor.config.json
+App/App/config.xml
+
+# Firebase の設定ファイル (../firebase/ から build.mjs が写す・git に入れない)
+App/App/GoogleService-Info.plist
+
+# npx cap sync が作る絶対パスのリンク (この Mac の場所が入る・git に入れない)
+App/CapApp-SPM/symlinks/

@@ -13,7 +13,7 @@
 <link rel="icon" href="icons/icon-192.png" sizes="192x192" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-title" content="駅ルーレット">
-<script>try{var l=localStorage.getItem('yr:line');if(l&&l!=='l11302')document.documentElement.classList.add('is-restoring')}catch(e){}</script>
+<script>try{var l=localStorage.getItem('yr:line');if(l&&l!=='l11302')document.documentElement.classList.add('is-restoring')}catch(e){}try{if(window.Capacitor&&Capacitor.isNativePlatform())document.documentElement.classList.add('is-native')}catch(e){}</script>
 <link rel="preload" href="fonts/noto-sans-jp-900.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="fonts/noto-sans-jp-700.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="style.css">
@@ -25,6 +25,9 @@
     <div class="pickers">
       <label class="picker picker-region"><span class="sr-only">地域</span><select id="pick-region"><option>東京</option></select></label>
       <label class="picker picker-line"><span class="sr-only">路線</span><select id="pick-line"><option value="l11302">山手線</option></select></label>
+      <button class="about-open native-only" id="about-open" type="button" aria-label="このアプリについて" aria-haspopup="dialog">
+        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="10"/><path d="M12 11v6M12 7.2v.1"/></svg>
+      </button>
     </div>
     <h1 class="title" id="title">山手線ルーレット</h1>
     <svg class="confetti" viewBox="0 0 120 48" aria-hidden="true" focusable="false">
@@ -75,10 +78,37 @@
   </section>
 
   <div class="action">
+    <button class="share native-only" id="share" type="button">送る</button>
     <button class="spin" id="spin" type="button">回す</button>
   </div>
 
   <p class="sr-only" id="announce" aria-live="polite"></p>
 </main>
+
+<dialog class="about native-only" id="about" aria-labelledby="about-title">
+  <div class="about-bar">
+    <h2 class="about-title" id="about-title">このアプリについて</h2>
+    <button class="about-close" id="about-close" type="button" aria-label="閉じる">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 6l12 12M18 6 6 18"/></svg>
+    </button>
+  </div>
+  <div class="about-body">
+    <p class="about-app">駅ルーレット <span id="about-version"></span></p>
+    <p>鉄道会社とは関係のない、非公式のアプリです。</p>
+    <h3>路線と駅のデータ</h3>
+    <p>TrainLCD/StationAPI のデータ（MIT License, Copyright (c) 2019 TinyKitten）を加工して使っています。</p>
+    <details class="about-license" data-src="data/LICENSE-TrainLCD.txt"><summary>ライセンスの全文</summary><pre></pre></details>
+    <h3>フォント</h3>
+    <p>Noto Sans JP・League Spartan（SIL Open Font License 1.1）</p>
+    <details class="about-license" data-src="fonts/OFL-noto-sans-jp.txt"><summary>Noto Sans JP のライセンス</summary><pre></pre></details>
+    <details class="about-license" data-src="fonts/OFL-league-spartan.txt"><summary>League Spartan のライセンス</summary><pre></pre></details>
+    <h3>プライバシーとサポート</h3>
+    <ul class="about-links">
+      <li><a href="https://pokerlabinc.com/apps/privacy.html" target="_blank" rel="noopener">プライバシーポリシー</a></li>
+      <li><a href="https://pokerlabinc.com/apps/" target="_blank" rel="noopener">サポート・お問い合わせ</a></li>
+    </ul>
+    <p class="about-org">運営：Poker Lab株式会社</p>
+  </div>
+</dialog>
 </body>
 </html>
