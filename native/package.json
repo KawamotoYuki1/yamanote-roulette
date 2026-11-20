@@ -1,6 +1,7 @@
 {
   "name": "eki-roulette-app",
   "version": "1.0.0",
+  "appBuild": 1,
   "private": true,
   "type": "module",
   "scripts": {

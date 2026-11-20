@@ -19,6 +19,22 @@ const ADMOB_APP_ID = {
 const ATT_TEXT = 'あなたに合った広告を表示するために使います';
 /** アイコンの地・起動画面の色 (Web 版のアイコンと同じ黄色) */
 const BRAND_YELLOW = '#FFE110';
+/** 表示の版と、ストアに上げるたびに 1 増やす番号 (仕様 §6-2) */
+const APP = JSON.parse(await readFile(path.join(NATIVE, 'package.json'), 'utf8'));
+if (!/^\d+\.\d+\.\d+$/.test(APP.version) || !Number.isInteger(APP.appBuild) || APP.appBuild < 1) throw new Error('package.json の version / appBuild がおかしい');
+const TEAM_ID = 'YCYKLCPU96'; // Apple のチーム (POKER LAB K.K.)
+const ANDROID_SIGNING = `    signingConfigs {
+        release {
+            // Google Play のアップロード鍵 (リポの外)。scripts/release.mjs がキーチェーンから読んで環境変数で渡す (仕様 §6-2)
+            if (System.getenv('EKI_UPLOAD_KEYSTORE')) {
+                storeFile file(System.getenv('EKI_UPLOAD_KEYSTORE'))
+                storePassword System.getenv('EKI_UPLOAD_PASSWORD')
+                keyAlias 'upload'
+                keyPassword System.getenv('EKI_UPLOAD_PASSWORD')
+            }
+        }
+    }
+`;
 const LAUNCH_COLOR = '<color key="backgroundColor" red="1" green="0.88235294117647056" blue="0.062745098039215685" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>';
 const exists = (p) => stat(p).then(() => true, () => false);
 
@@ -49,6 +65,24 @@ async function configureAndroid() {
   await edit(strings, (xml) => (xml.includes('name="admob_app_id"')
     ? xml.replace(/<string name="admob_app_id">[^<]*<\/string>/, `<string name="admob_app_id">${ADMOB_APP_ID.android}</string>`)
     : xml.replace('</resources>', `    <string name="admob_app_id">${ADMOB_APP_ID.android}</string>\n</resources>`)));
+  // 版と番号・本番の署名 (仕様 §6-2)
+  const gradle = path.join(dir, 'app/build.gradle');
+  await edit(gradle, (text) => {
+    let out = text
+      .replace(/versionCode \d+/, `versionCode ${APP.appBuild}`)
+      .replace(/versionName "[^"]*"/, `versionName "${APP.version}"`);
+    if (!out.includes('EKI_UPLOAD_KEYSTORE')) {
+      out = out.replace('    buildTypes {\n', `${ANDROID_SIGNING}    buildTypes {\n`)
+        .replace('        release {\n            minifyEnabled', "        release {\n            if (System.getenv('EKI_UPLOAD_KEYSTORE')) signingConfig signingConfigs.release\n            minifyEnabled");
+    }
+    return out;
+  });
+  const gradleText = await readFile(gradle, 'utf8');
+  if (!gradleText.includes(`versionCode ${APP.appBuild}`) || !gradleText.includes(`versionName "${APP.version}"`)
+    || (gradleText.match(/EKI_UPLOAD_KEYSTORE/g) || []).length !== 3) {
+    throw new Error('app/build.gradle を直せなかった');
+  }
+
   // アイコンの地と起動画面: テーマの背景色 + アプリのアイコン。雛形の引き伸ばす絵 (drawable*/splash.png) は使わない (仕様 §5-2)
   const res = path.join(dir, 'app/src/main/res');
   await edit(path.join(res, 'values/ic_launcher_background.xml'), (xml) => xml.replace(
@@ -123,8 +157,21 @@ async function configureIos() {
     throw new Error('LaunchScreen.storyboard を直せなかった');
   }
 
-  // iPhone 専用 (仕様 §5-2)
-  await edit(pbx, (text) => text.replaceAll('TARGETED_DEVICE_FAMILY = "1,2";', 'TARGETED_DEVICE_FAMILY = 1;'));
+  // iPhone 専用 (仕様 §5-2)・版と番号・チーム (仕様 §6-2)
+  await edit(pbx, (text) => {
+    let out = text.replaceAll('TARGETED_DEVICE_FAMILY = "1,2";', 'TARGETED_DEVICE_FAMILY = 1;')
+      .replace(/MARKETING_VERSION = [^;]*;/g, `MARKETING_VERSION = ${APP.version};`)
+      .replace(/CURRENT_PROJECT_VERSION = [^;]*;/g, `CURRENT_PROJECT_VERSION = ${APP.appBuild};`);
+    if (!out.includes(`DEVELOPMENT_TEAM = ${TEAM_ID};`)) {
+      out = out.replaceAll('\t\t\t\tCODE_SIGN_STYLE = Automatic;\n', `\t\t\t\tCODE_SIGN_STYLE = Automatic;\n\t\t\t\tDEVELOPMENT_TEAM = ${TEAM_ID};\n`);
+    }
+    return out;
+  });
+  const pbxText = await readFile(pbx, 'utf8');
+  if ((pbxText.match(new RegExp(`DEVELOPMENT_TEAM = ${TEAM_ID};`, 'g')) || []).length !== 2
+    || (pbxText.match(new RegExp(`MARKETING_VERSION = ${APP.version.replaceAll('.', '\\.')};`, 'g')) || []).length !== 2) {
+    throw new Error('project.pbxproj の版・チームを入れられなかった');
+  }
   if ((await readFile(pbx, 'utf8')).includes('TARGETED_DEVICE_FAMILY = "1,2"')) throw new Error('iPhone 専用にできなかった');
   return 'OK';
 }
