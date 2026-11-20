@@ -17,8 +17,8 @@ const ADMOB_APP_ID = {
   ios: 'ca-app-pub-4798502599946388~2212055663',
 };
 const ATT_TEXT = 'あなたに合った広告を表示するために使います';
-/** アイコンの地・起動画面の色 (Web 版のアイコンと同じ黄色) */
-const BRAND_YELLOW = '#FFE110';
+/** アプリのアイコンの地・起動画面の色 = 白 (仕様 §5-2) */
+const ICON_BACKGROUND = '#FFFFFF';
 /** 表示の版と、ストアに上げるたびに 1 増やす番号 (仕様 §6-2) */
 const APP = JSON.parse(await readFile(path.join(NATIVE, 'package.json'), 'utf8'));
 if (!/^\d+\.\d+\.\d+$/.test(APP.version) || !Number.isInteger(APP.appBuild) || APP.appBuild < 1) throw new Error('package.json の version / appBuild がおかしい');
@@ -35,7 +35,7 @@ const ANDROID_SIGNING = `    signingConfigs {
         }
     }
 `;
-const LAUNCH_COLOR = '<color key="backgroundColor" red="1" green="0.88235294117647056" blue="0.062745098039215685" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>';
+const LAUNCH_COLOR = '<color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>';
 const exists = (p) => stat(p).then(() => true, () => false);
 
 async function edit(file, fn) {
@@ -86,7 +86,7 @@ async function configureAndroid() {
   // アイコンの地と起動画面: テーマの背景色 + アプリのアイコン。雛形の引き伸ばす絵 (drawable*/splash.png) は使わない (仕様 §5-2)
   const res = path.join(dir, 'app/src/main/res');
   await edit(path.join(res, 'values/ic_launcher_background.xml'), (xml) => xml.replace(
-    /(<color name="ic_launcher_background">)[^<]*(<\/color>)/, `$1${BRAND_YELLOW}$2`,
+    /(<color name="ic_launcher_background">)[^<]*(<\/color>)/, `$1${ICON_BACKGROUND}$2`,
   ));
   await edit(path.join(res, 'values/styles.xml'), (xml) => xml.replace(
     /(<style name="AppTheme\.NoActionBarLaunch" parent="Theme\.SplashScreen">)[\s\S]*?(<\/style>)/,
@@ -146,7 +146,7 @@ async function configureIos() {
     }
     return out;
   });
-  // 起動画面: 背景色 = 黄色・真ん中に Splash (160pt) を拡大縮小せずに (仕様 §5-2)
+  // 起動画面: 背景色 = 白・真ん中に Splash (160pt) を拡大縮小せずに (仕様 §5-2)
   const launch = path.join(dir, 'App/App/Base.lproj/LaunchScreen.storyboard');
   await edit(launch, (xml) => xml
     .replace(/(<imageView key="view"[^>]*?)contentMode="[^"]*"/, '$1contentMode="center"')

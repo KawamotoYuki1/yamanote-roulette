@@ -55,6 +55,8 @@ let adsRefused = false;
 /** 'idle' | 'loading' | 'shown' | 'failed'。失敗したバナーはプラグインが片づけるので、こちらで出し直す (仕様 §2-1) */
 let bannerState = 'idle';
 let interstitialReady = false;
+/** (iOS) 追跡の許可の答えが出たら終わる。Android・聞かないときはすぐ終わる */
+let trackingAnswered = Promise.resolve();
 let interstitialLoading = false;
 let onInterstitialDone = null;
 
@@ -150,7 +152,7 @@ async function askTracking() {
   }
 }
 
-/** 同意の確認 → (iOS) 追跡の許可 → 初期化 → 広告。広告が全部 OFF のときは何もしない (追跡の許可も聞かない) */
+/** 同意の確認 → (iOS) 追跡の許可の答えを待つ → 初期化 → 広告。広告が全部 OFF のときは何もしない (追跡の許可は start() が ON/OFF に関係なく聞く) */
 async function startAds() {
   if (adsStarted || adsStarting || adsRefused || !UNITS) return;
   if (!settings.bannerEnabled && !settings.interstitialEnabled) return;
@@ -164,11 +166,8 @@ async function startAds() {
       }
       if (!canRequestAds) { adsRefused = true; return; }
     } catch { /* 同意の確認ができないときも、日本では出す場面が無いので続ける */ }
-    if (PLATFORM === 'ios') {
-      try {
-        await askTracking();
-      } catch { /* 断られても・聞けなくても、人に合わせない広告で続ける */ }
-    }
+    // 追跡の許可の答えが出るまで待ってから広告を読む (聞くのは start() で、広告の ON/OFF に関係なく 1 回)
+    await trackingAnswered;
     await AdMob.initialize();
     adsStarted = true;
   } finally {
@@ -233,10 +232,12 @@ export function start() {
   if (version) version.textContent = APP_VERSION;
   if (PLATFORM === 'android') watchBackButton();
 
-  // 盤が出た後に、管理画面の値を取ってから広告を始める
+  // 盤が出た後に、(iOS) 追跡の許可を聞き、管理画面の値を取ってから広告を始める
   (async () => {
     await nextFrame();
     await nextFrame();
+    // 広告の ON/OFF に関係なく聞く (仕様 §4・審査中の広告 OFF でも確認画面が出る)。断られても・聞けなくても広告は出る
+    if (PLATFORM === 'ios') trackingAnswered = askTracking().catch(() => {});
     settings = await loadSettings();
     if (ADS_MODE === 'test') settings = { ...settings, bannerEnabled: true, interstitialEnabled: true };
     // 追跡の許可の答えを待っている間に電波が戻っても読み直せるように、始める前に付ける
