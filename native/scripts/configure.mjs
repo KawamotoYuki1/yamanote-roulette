@@ -1,12 +1,13 @@
 /**
  * android/ と ios/ (npx cap add で作ったもの) に、アプリの設定を入れる。何度流しても同じ結果になる。
  * 使い方 (native/ で): node scripts/configure.mjs
- *   Android: allowBackup = false / AdMob のアプリ ID (meta-data + strings)
- *   iOS: Info.plist (AdMob のアプリ ID・追跡の許可の説明文・SKAdNetwork・暗号の申告) / GoogleService-Info.plist を Xcode のターゲットに足す
- * 仕様: docs/spec-app.md §1・§4。SKAdNetwork の一覧 = config/skadnetwork-ids.txt (Google の iOS クイックスタートのページから)
+ *   Android: allowBackup = false / AdMob のアプリ ID (meta-data + strings) / 縦だけ / アイコンの背景色と起動画面のテーマ (雛形の splash.png を消す)
+ *   iOS: Info.plist (AdMob のアプリ ID・追跡の許可の説明文・SKAdNetwork・暗号の申告・縦だけ) / GoogleService-Info.plist を Xcode のターゲットに足す / iPhone 専用
+ * アイコンと起動画面の絵は tools/make_icons.py --app が書く。
+ * 仕様: docs/spec-app.md §1・§4・§5-2。SKAdNetwork の一覧 = config/skadnetwork-ids.txt (Google の iOS クイックスタートのページから)
  */
 import { execFileSync } from 'node:child_process';
-import { readFile, writeFile, stat } from 'node:fs/promises';
+import { readFile, writeFile, stat, readdir, rm, rmdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
@@ -16,6 +17,9 @@ const ADMOB_APP_ID = {
   ios: 'ca-app-pub-4798502599946388~2212055663',
 };
 const ATT_TEXT = 'あなたに合った広告を表示するために使います';
+/** アイコンの地・起動画面の色 (Web 版のアイコンと同じ黄色) */
+const BRAND_YELLOW = '#FFE110';
+const LAUNCH_COLOR = '<color key="backgroundColor" red="1" green="0.88235294117647056" blue="0.062745098039215685" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>';
 const exists = (p) => stat(p).then(() => true, () => false);
 
 async function edit(file, fn) {
@@ -31,6 +35,8 @@ async function configureAndroid() {
   const manifest = path.join(dir, 'app/src/main/AndroidManifest.xml');
   await edit(manifest, (xml) => {
     let out = xml.replace('android:allowBackup="true"', 'android:allowBackup="false"');
+    // 画面の向き = 縦だけ (仕様 §5-2)。activity は MainActivity の 1 つだけ
+    if (!out.includes('android:screenOrientation=')) out = out.replace('<activity', '<activity\n            android:screenOrientation="portrait"');
     if (!out.includes('com.google.android.gms.ads.APPLICATION_ID')) {
       out = out.replace(
         /(<application[^>]*>)/,
@@ -43,10 +49,28 @@ async function configureAndroid() {
   await edit(strings, (xml) => (xml.includes('name="admob_app_id"')
     ? xml.replace(/<string name="admob_app_id">[^<]*<\/string>/, `<string name="admob_app_id">${ADMOB_APP_ID.android}</string>`)
     : xml.replace('</resources>', `    <string name="admob_app_id">${ADMOB_APP_ID.android}</string>\n</resources>`)));
+  // アイコンの地と起動画面: テーマの背景色 + アプリのアイコン。雛形の引き伸ばす絵 (drawable*/splash.png) は使わない (仕様 §5-2)
+  const res = path.join(dir, 'app/src/main/res');
+  await edit(path.join(res, 'values/ic_launcher_background.xml'), (xml) => xml.replace(
+    /(<color name="ic_launcher_background">)[^<]*(<\/color>)/, `$1${BRAND_YELLOW}$2`,
+  ));
+  await edit(path.join(res, 'values/styles.xml'), (xml) => xml.replace(
+    /(<style name="AppTheme\.NoActionBarLaunch" parent="Theme\.SplashScreen">)[\s\S]*?(<\/style>)/,
+    '$1\n        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>\n'
+      + '        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>\n    $2',
+  ));
+  for (const folder of (await readdir(res)).filter((name) => name.startsWith('drawable'))) {
+    const png = path.join(res, folder, 'splash.png');
+    if (await exists(png)) await rm(png);
+    if ((await readdir(path.join(res, folder))).length === 0) await rmdir(path.join(res, folder));
+  }
   const check = await readFile(manifest, 'utf8');
-  if (!check.includes('android:allowBackup="false"') || !check.includes('@string/admob_app_id')) {
+  const styles = await readFile(path.join(res, 'values/styles.xml'), 'utf8');
+  if (!check.includes('android:allowBackup="false"') || !check.includes('@string/admob_app_id')
+    || !check.includes('android:screenOrientation="portrait"')) {
     throw new Error('AndroidManifest.xml を直せなかった');
   }
+  if (!styles.includes('windowSplashScreenBackground') || styles.includes('@drawable/splash')) throw new Error('styles.xml を直せなかった');
   return 'OK';
 }
 
@@ -61,6 +85,7 @@ async function configureIos() {
   plutil('-replace', 'GADApplicationIdentifier', '-string', ADMOB_APP_ID.ios);
   plutil('-replace', 'NSUserTrackingUsageDescription', '-string', ATT_TEXT);
   plutil('-replace', 'ITSAppUsesNonExemptEncryption', '-bool', 'NO');
+  plutil('-replace', 'UISupportedInterfaceOrientations', '-json', JSON.stringify(['UIInterfaceOrientationPortrait']));
   const ids = (await readFile(path.join(NATIVE, 'config/skadnetwork-ids.txt'), 'utf8')).split('\n').map((s) => s.trim()).filter(Boolean);
   if (ids.length < 1 || !ids.every((id) => /^[a-z0-9]{10}\.skadnetwork$/.test(id))) throw new Error('skadnetwork-ids.txt の形がおかしい');
   plutil('-replace', 'SKAdNetworkItems', '-json', JSON.stringify(ids.map((id) => ({ SKAdNetworkIdentifier: id }))));
@@ -87,6 +112,20 @@ async function configureIos() {
     }
     return out;
   });
+  // 起動画面: 背景色 = 黄色・真ん中に Splash (160pt) を拡大縮小せずに (仕様 §5-2)
+  const launch = path.join(dir, 'App/App/Base.lproj/LaunchScreen.storyboard');
+  await edit(launch, (xml) => xml
+    .replace(/(<imageView key="view"[^>]*?)contentMode="[^"]*"/, '$1contentMode="center"')
+    .replace(/(<imageView key="view"[\s\S]*?)<color key="backgroundColor"[^>]*\/>/, `$1${LAUNCH_COLOR}`)
+    .replace(/<image name="Splash" width="[^"]*" height="[^"]*"\/>/, '<image name="Splash" width="160" height="160"/>'));
+  const launchXml = await readFile(launch, 'utf8');
+  if (!launchXml.includes('contentMode="center"') || !launchXml.includes(LAUNCH_COLOR) || !launchXml.includes('width="160"')) {
+    throw new Error('LaunchScreen.storyboard を直せなかった');
+  }
+
+  // iPhone 専用 (仕様 §5-2)
+  await edit(pbx, (text) => text.replaceAll('TARGETED_DEVICE_FAMILY = "1,2";', 'TARGETED_DEVICE_FAMILY = 1;'));
+  if ((await readFile(pbx, 'utf8')).includes('TARGETED_DEVICE_FAMILY = "1,2"')) throw new Error('iPhone 専用にできなかった');
   return 'OK';
 }
 
