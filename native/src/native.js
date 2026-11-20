@@ -1,5 +1,5 @@
 /**
- * アプリ (iOS・Android) だけで動く部分: 広告 (バナー・動画)・管理画面 (Remote Config)・追跡の許可 (ATT)・振動・送る・戻るボタン。
+ * アプリ (iOS・Android) だけで動く部分: 広告 (バナー・動画)・管理画面 (Remote Config)・追跡の許可 (ATT)・振動・共有・戻るボタン。
  * scripts/build.mjs が esbuild で www/js/native.js にまとめる。js/app.js がアプリのときだけ読み、start() を呼ぶ。
  * 仕様: docs/spec-app.md §2〜§5
  */

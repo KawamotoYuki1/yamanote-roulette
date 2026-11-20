@@ -55,7 +55,7 @@ const ui = {
 };
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-/** アプリ (iOS・Android) のとき: 広告・振動・送る・このアプリについて は js/native.js (アプリにだけ入る) が受け持つ */
+/** アプリ (iOS・Android) のとき: 広告・振動・共有・このアプリについて は js/native.js (アプリにだけ入る) が受け持つ */
 const isNative = document.documentElement.classList.contains('is-native');
 let native = null;
 let adShowing = false;
