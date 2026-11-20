@@ -5,8 +5,8 @@
  * どちらも: Web 版を本番の広告で写す (build.mjs --ads=release) → 版と設定を入れる (configure.mjs) → アプリへ写す (cap sync)
  * ストアに上げ直すときは package.json の appBuild を 1 増やしてから流す (同じ番号は 2 回上げられない)
  */
-import { execFileSync } from 'node:child_process';
-import { copyFile, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { execFileSync, spawnSync } from 'node:child_process';
+import { copyFile, mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import os from 'node:os';
 import path from 'node:path';
@@ -60,9 +60,31 @@ if (target === 'android') {
   run('xcodebuild', [
     '-project', 'App.xcodeproj', '-scheme', 'App', '-configuration', 'Release',
     '-destination', 'generic/platform=iOS', '-archivePath', archive,
-    '-allowProvisioningUpdates', 'archive',
+    // アーカイブは署名なしで作り、下の書き出しで配布用に署名する。自動署名のアーカイブは開発用のプロファイルを作ろうとし、
+    // 登録した端末が無いと失敗する (実測)。書き出しは Apple の配布用の証明書 (クラウド管理) と App Store 用のプロファイルを使う
+    'CODE_SIGNING_ALLOWED=NO',
+    'archive',
   ], { cwd: path.join(NATIVE, 'ios/App') });
-  checkAdIds(await readFile(path.join(archive, 'Products/Applications/App.app/public/js/native.js'), 'utf8'), 'アーカイブ');
+  const appDir = path.join(archive, 'Products/Applications/App.app');
+  checkAdIds(await readFile(path.join(appDir, 'public/js/native.js'), 'utf8'), 'アーカイブ');
+  // Google の広告の部品 (GoogleMobileAds・UserMessagingPlatform) は仮の署名 (ad hoc) つきで配られる。署名なしのアーカイブでは
+  // それが残り、書き出しで配布用に署名し直されず、App Store Connect が「署名が正しくない」と断る (実測) → 仮の署名を外してから書き出す
+  for (const name of await readdir(path.join(appDir, 'Frameworks'))) {
+    if (!name.endsWith('.framework')) continue;
+    const bin = path.join(appDir, 'Frameworks', name, name.replace(/\.framework$/, ''));
+    const info = spawnSync('codesign', ['-dv', bin], { encoding: 'utf8' }); // 署名の情報は stderr に出る
+    if (/Signature=adhoc/.test(`${info.stdout}${info.stderr}`)) {
+      execFileSync('codesign', ['--remove-signature', bin]);
+      await rm(path.join(appDir, 'Frameworks', name, '_CodeSignature'), { recursive: true, force: true });
+      console.log(`仮の署名を外した: ${name}`);
+    }
+  }
+  // 外したあと、アプリの中に仮の署名が残っていないか
+  for (const name of await readdir(path.join(appDir, 'Frameworks'))) {
+    if (!name.endsWith('.framework')) continue;
+    const left = spawnSync('codesign', ['-dv', path.join(appDir, 'Frameworks', name)], { encoding: 'utf8' });
+    if (/Signature=adhoc/.test(`${left.stdout}${left.stderr}`)) throw new Error(`仮の署名が残っている: ${name}`);
+  }
   // App Store Connect に上げる (method = app-store-connect・destination = upload)。版と番号は package.json のまま変えさせない
   const options = path.join(DIST, 'ExportOptions.plist');
   await writeFile(options, `<?xml version="1.0" encoding="UTF-8"?>
