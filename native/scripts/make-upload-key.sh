@@ -20,11 +20,18 @@ chmod 700 "${KEYSTORE:h}"
 EKI_PW="$(openssl rand -base64 48 | tr -dc 'A-Za-z0-9' | cut -c1-32)"
 [[ ${#EKI_PW} -eq 32 ]] || { echo 'パスワードを作れなかった' >&2; exit 1; }
 export EKI_PW
-"$KEYTOOL" -genkeypair -keystore "$KEYSTORE" -storetype PKCS12 -alias upload \
+# 先にキーチェーンへ入れる (鍵を作った後で保存に失敗すると、パスワードが失われて鍵が使えなくなるため)
+# パスワードはコマンドの引数に載せない (実行中に ps で見える) → シェルの内部コマンド printf から security -i へ標準入力で渡す
+printf 'add-generic-password -a upload -s %s -l %s -w %s\n' "$SERVICE" "$SERVICE" "$EKI_PW" | security -i
+security find-generic-password -s "$SERVICE" >/dev/null 2>&1 || { echo 'キーチェーンに入れられなかった' >&2; exit 1; }
+if ! "$KEYTOOL" -genkeypair -keystore "$KEYSTORE" -storetype PKCS12 -alias upload \
   -keyalg RSA -keysize 4096 -validity 10000 \
   -storepass:env EKI_PW -keypass:env EKI_PW \
-  -dname 'CN=POKER LAB K.K., O=POKER LAB K.K., L=Tokyo, C=JP' >/dev/null
-security add-generic-password -a upload -s "$SERVICE" -l '駅ルーレット Android アップロード鍵' -w "$EKI_PW"
+  -dname 'CN=POKER LAB K.K., O=POKER LAB K.K., L=Tokyo, C=JP' >/dev/null; then
+  security delete-generic-password -s "$SERVICE" >/dev/null 2>&1
+  echo '鍵を作れなかった (キーチェーンの項目も消した)' >&2
+  exit 1
+fi
 unset EKI_PW
 chmod 600 "$KEYSTORE"
 

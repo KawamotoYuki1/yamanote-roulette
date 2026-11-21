@@ -120,6 +120,7 @@ async function configureIos() {
   plutil('-replace', 'NSUserTrackingUsageDescription', '-string', ATT_TEXT);
   plutil('-replace', 'ITSAppUsesNonExemptEncryption', '-bool', 'NO');
   plutil('-replace', 'UISupportedInterfaceOrientations', '-json', JSON.stringify(['UIInterfaceOrientationPortrait']));
+  plutil('-replace', 'UISupportedInterfaceOrientations~ipad', '-json', JSON.stringify(['UIInterfaceOrientationPortrait']));
   const ids = (await readFile(path.join(NATIVE, 'config/skadnetwork-ids.txt'), 'utf8')).split('\n').map((s) => s.trim()).filter(Boolean);
   if (ids.length < 1 || !ids.every((id) => /^[a-z0-9]{10}\.skadnetwork$/.test(id))) throw new Error('skadnetwork-ids.txt の形がおかしい');
   plutil('-replace', 'SKAdNetworkItems', '-json', JSON.stringify(ids.map((id) => ({ SKAdNetworkIdentifier: id }))));
@@ -152,6 +153,9 @@ async function configureIos() {
     .replace(/(<imageView key="view"[^>]*?)contentMode="[^"]*"/, '$1contentMode="center"')
     .replace(/(<imageView key="view"[\s\S]*?)<color key="backgroundColor"[^>]*\/>/, `$1${LAUNCH_COLOR}`)
     .replace(/<image name="Splash" width="[^"]*" height="[^"]*"\/>/, '<image name="Splash" width="160" height="160"/>'));
+  // 真ん中に出す絵 (160pt) ができているか。雛形の 2732px のままだと、大きく切れた起動画面になる
+  const splashSet = await readFile(path.join(dir, 'App/App/Assets.xcassets/Splash.imageset/Contents.json'), 'utf8');
+  if (!splashSet.includes('"splash.png"')) throw new Error('起動画面の絵が雛形のまま: 先に python3 -I tools/make_icons.py --app を流す');
   const launchXml = await readFile(launch, 'utf8');
   if (!launchXml.includes('contentMode="center"') || !launchXml.includes(LAUNCH_COLOR) || !launchXml.includes('width="160"')) {
     throw new Error('LaunchScreen.storyboard を直せなかった');

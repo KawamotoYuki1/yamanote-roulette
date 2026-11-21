@@ -1,7 +1,7 @@
 /**
  * 本番のビルド (仕様 docs/spec-app.md §6-2)。使い方 (native/ で):
  *   node scripts/release.mjs android  … AAB をアップロード鍵で署名して dist/ に置く (Google Play へは Play Console で上げる)
- *   node scripts/release.mjs ios      … アーカイブ → App Store Connect に上げる (TestFlight)。Xcode に admin@pokerlabinc.com でログインしておく
+ *   node scripts/release.mjs ios      … アーカイブ → App Store Connect に上げる (TestFlight)。Xcode にチームのアカウントでログインしておく
  * どちらも: Web 版を本番の広告で写す (build.mjs --ads=release) → 版と設定を入れる (configure.mjs) → アプリへ写す (cap sync)
  * ストアに上げ直すときは package.json の appBuild を 1 増やしてから流す (同じ番号は 2 回上げられない)
  */
